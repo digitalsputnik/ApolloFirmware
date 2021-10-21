@@ -76,6 +76,8 @@ class Render():
     _currentStep = 0
     _currentTemp = 600
 
+    _tempCompEnable = True
+
     _r = 0
     _g = 0
     _b = 0
@@ -227,7 +229,10 @@ class Render():
         # output
             # add 30C to adjust for the -30C starting point
         compensatedRed = self._redLut[self._currentTemp+300]*localR>>10
-        self._pwm[0].duty(compensatedRed) # calibrate the Red CH
+        if self._tempCompEnable:
+            self._pwm[0].duty(compensatedRed) # calibrate the Red CH
+        else:
+            self._pwm[0].duty(localW) 
 
         self._pwm[1].duty(localG)
         self._pwm[2].duty(localB)
