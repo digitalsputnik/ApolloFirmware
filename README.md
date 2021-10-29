@@ -4,7 +4,7 @@ Micropython software for the Apollo lamps
 
 # instalation
 
-1. Download micropython: https://micropython.org/download/esp32/ (1.17 with spi RAM)
+1. Download micropython: https://micropython.org/download/esp32spiram/ (1.17 with spi RAM)
 1. Install Python3, pip3
 1. Install ampy (```pip3 install adafruit-ampy```)
 1. Install esptool (```pip3 install esptool```)
