@@ -1,4 +1,3 @@
-from boot import Output
 import uasyncio as asyncio
 import _thread
 import time
