@@ -2,9 +2,12 @@ import network
 import socket
 import machine
 import time
-import Render
 import ble_repl
 import btree
+
+# disable all outputs to avoid blinking during setup 
+machine.Pin(27, machine.Pin.OUT, value=0)
+
 
 # open btree database
 try:
@@ -42,21 +45,10 @@ def wifiAp():
     print("")
     print('network config:', sta_if.ifconfig())
 
-#i2c
-i2c = machine.SoftI2C(scl=machine.Pin(22), sda=machine.Pin(23))
-
-# LED output RGBW
-Output = Render.Render(i2cInterface=i2c)
-
-# fan @ pin(0)
-fan = machine.PWM(machine.Pin(0),duty=1023)
 
 # Input Voltage sensor 1:7.81
 inputVoltage = machine.ADC(machine.Pin(32))
 inputVoltage.atten(machine.ADC.ATTN_11DB)
-
-# enable outputs
-enableAll = machine.Pin(27, machine.Pin.OUT, value=1)
 
 # enable BLE
 ble_repl.start(deviceId)

@@ -1,41 +1,48 @@
-from boot import Output
 import uasyncio as asyncio
 import _thread
 import time
+import Render
+import machine
 
+from Empire.E_uArtnet_client import E_uArtnet_client as ArtNet
 
-class ArtNetClient:
-    '''Ultra simple Art-Net client 
-    
-    Ignore all cheks and just push 1st 4 values in 1st DMX universe onto the LEDs
-    '''
-    
-    
-    def __init__(self, renderer):
-        self._render = renderer
-        # TODO check if inet is up
-        self._socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-        self._socket.bind((sta_if.ifconfig()[0],6454))
-        #self._socket.bind(("127.0.0.1",6454))
-        self._thread_id = _thread.get_ident()
-        #self._sock.setblocking(False)
+# ----- [0] Hardware interfaces
 
-        _thread.start_new_thread(self.udpReader,())
+#i2c
+i2c = machine.SoftI2C(scl=machine.Pin(22), sda=machine.Pin(23))
 
-    def udpReader(self): 
-        while True:
-            try:
-                data, addr = self._socket.recvfrom(1024)
-                # check if it is an artnet packet
-                if len(data) > 20:
-                    header = data[0:7]
-                    if header == b"Art-Net":
-                        self._render.setColor(data[18],data[19],data[20])
-            except Exception as e:
-                print(e)
+# fan @ pin(0)
+fan = machine.PWM(machine.Pin(0),duty=1023)
 
 
 
+# ----- [1] Output objects
+
+# LED output RGBW
+Output = Render.Render(i2cInterface=i2c)
+
+
+# ----- [2] Input objects
+
+# WiFi
+#wifiAp()
+#wifiConnect("DS","SputnikulOn4Antenni")
+
+
+# ArtNet
+def artNetCallback(data_in):
+    Output.setColor(data_in[0],data_in[1],data_in[2])
+
+if db[b"ArtNet"] == b"On":
+    ArtNetClientD = ArtNet(artNetCallback,debug=True)
+
+# ----- [9] Software
+time.sleep(2)
+enable_all = machine.Pin(27, machine.Pin.OUT, value=1)
+
+
+
+'''
 def toggleArtnetBoot():
     if db[b"ArtNet"] == b"On":
         db[b"ArtNet"] = b"Off"
@@ -48,7 +55,26 @@ def toggleArtnetBoot():
         f.write("mydb")
         machine.reset()    
 
-if db[b"ArtNet"] == b"On":
-    wifiAp()
-    global ArtNetClientD
-    ArtNetClientD = ArtNetClient(Output)     
+def run_server(saddr, port):
+    sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+
+    sock.bind((saddr, port))
+
+    try:
+        while True:
+            data, caddr = sock.recvfrom(1472)
+            if data[0:5] == b'/REPL':
+                end = data[12:].find(b'\x00\x00')
+                message = data[12:].decode("utf-8").strip()
+                
+                print(message)
+                eval(message)
+                time.sleep_ms(10)
+    finally:
+        sock.close()
+
+
+
+        
+'''
