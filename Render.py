@@ -83,7 +83,7 @@ class Render():
     _b = 0
     _w = 0
 
-    def __init__(self, i2cInterface, i2c_addr=79 rPin=21, gPin=19, bPin=18, wPin=4):
+    def __init__(self, i2cInterface, i2c_addr=79, rPin=21, gPin=19, bPin=18, wPin=4):
         # generate hardware PWM outputs per channels
         self._pwm = []
         self._pwm.append(machine.PWM(machine.Pin(rPin)))
