@@ -19,7 +19,7 @@ fan = machine.PWM(machine.Pin(0),duty=1023)
 # ----- [1] Output objects
 
 # LED output RGBW
-Output = Render.Render(i2cInterface=i2c)
+Output = Render.Render(i2cInterface=i2c, i2c_addr=79)
 
 
 # ----- [2] Input objects
