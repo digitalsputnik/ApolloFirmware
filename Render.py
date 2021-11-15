@@ -62,8 +62,8 @@ class Render():
 
     #_wbKeys = ((1, 3, 1, 1, 10), (25, 217, 167, 56, 225), (50, 425, 504, 113, 450), (75, 653, 736, 169, 675), (100, 870, 960, 225, 900))
     # key point in 8bit
-    _wbKeys = ((1, 3, 1, 1, 10), (64, 210, 265, 56, 200), (128, 425, 504, 113, 450), (191, 653, 736, 169, 675), (255, 870, 960, 225, 900))
-   #_wbKeys = ((1, 3, 2, 1, 10), (64, 220, 310, 56, 180), (128, 445, 580, 113, 420), (191, 653, 830, 169, 575), (255, 820, 999, 200, 900))
+   #_wbKeys = ((1, 3, 1, 1, 10), (64, 210, 265, 56, 200), (128, 425, 504, 113, 450), (191, 653, 736, 169, 675), (255, 870, 960, 225, 900))
+    _wbKeys = ((1, 3, 2, 1, 10), (64, 220, 310, 56, 180), (128, 445, 580, 113, 420), (191, 653, 830, 169, 575), (255, 820, 999, 200, 900))
 
     _rInput = 0
     _gInput = 0
@@ -83,7 +83,7 @@ class Render():
     _b = 0
     _w = 0
 
-    def __init__(self, i2cInterface, i2c_addr=79, rPin=21, gPin=19, bPin=18, wPin=4):
+    def __init__(self, i2cInterface, i2c_addr=79 rPin=21, gPin=19, bPin=18, wPin=4):
         # generate hardware PWM outputs per channels
         self._pwm = []
         self._pwm.append(machine.PWM(machine.Pin(rPin)))
@@ -96,7 +96,7 @@ class Render():
         self.genRedLut()
         self.genWBLut()
 
-        self._tempSensor = LM75.LM75(i2cInterface,0x4f)
+        self._tempSensor = LM75.LM75(i2cInterface,i2c_addr)
         self._tempValues = []
         self._tempTimer = machine.Timer(2)
         self._tempTimer.init(period=1000, mode=machine.Timer.PERIODIC, callback=self._updateTemp)
