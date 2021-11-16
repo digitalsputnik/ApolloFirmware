@@ -74,7 +74,8 @@ class Render():
     _bStep = 0
     _wStep = 0
     _currentStep = 0
-    _currentTemp = 600
+    
+    _temp_sensor = None
 
     _tempCompEnable = True
 
@@ -83,7 +84,7 @@ class Render():
     _b = 0
     _w = 0
 
-    def __init__(self, i2cInterface, i2c_addr=79, rPin=21, gPin=19, bPin=18, wPin=4):
+    def __init__(self, temp_sensor=None, rPin=21, gPin=19, bPin=18, wPin=4):
         # generate hardware PWM outputs per channels
         self._pwm = []
         self._pwm.append(machine.PWM(machine.Pin(rPin)))
@@ -92,14 +93,12 @@ class Render():
         self._pwm.append(machine.PWM(machine.Pin(wPin)))
         self._pwm[0].freq(19000)
 
+        # temp sensor
+        self._temp_sensor = temp_sensor
+        
         # init temp calibartion
         self.genRedLut()
         self.genWBLut()
-
-        self._tempSensor = LM75.LM75(i2cInterface,i2c_addr)
-        self._tempValues = []
-        self._tempTimer = machine.Timer(2)
-        self._tempTimer.init(period=1000, mode=machine.Timer.PERIODIC, callback=self._updateTemp)
 
         # initiate render function periodically
         self._timer = machine.Timer(1)
@@ -108,15 +107,6 @@ class Render():
 
         # set the deadline for the 1st render to finish
         self._deadline = time.ticks_add(time.ticks_ms(), self.__renderWindowMS)
-        
-    def _updateTemp(self,caller):
-        if len(self._tempValues) < 7:
-            sensor = self._tempSensor.get_temp()
-            # multiply values by 10 (to avoid float)
-            self._tempValues.append((sensor[0]*10+sensor[1])) 
-        else:
-            self._currentTemp = self._tempValues[3]
-            self._tempValues = []
 
 
     def setColor(self, rIn=0, gIn=0, bIn=0, wbIn=5600):
@@ -227,8 +217,9 @@ class Render():
             self._currentStep += 1
 
         # output
-            # add 30C to adjust for the -30C starting point
-        compensatedRed = self._redLut[self._currentTemp+300]*localR>>10
+        # add 30C to adjust for the -30C starting point
+        currentTemp = self._temp_sensor.read()
+        compensatedRed = self._redLut[currentTemp+300]*localR>>10
         if self._tempCompEnable:
             self._pwm[0].duty(compensatedRed) # calibrate the Red CH
         else:

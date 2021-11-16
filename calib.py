@@ -1,20 +1,20 @@
 '''
 Toolset for calibrating the lamp
+Output is DS_Render output object for driving the leds while calibrating
 
 to start:
+import calib
 c = calib.calib()
 
-1. Calibrate max intesity for all WB (1500K-10 000K)
-    c.update(c._5600K,c._intensity_100,offset=(0,0,0,0),output=Output)
-
-2. Calibrate 25-75% points
-    c.update(c._5600K,c._intensity_75,offset=(0,0,0,0),output=Output)
+1. Calibrate all intesity levels for all WB (1500K-10 000K)
+c.update(c._5600K,c._intensity_100,offset=(0,0,0,0),output=Output)
+c.update(c._3200K,c._intensity_75,offset=(0,0,0,0),output=Output)
     
 3. Export output and copy to the calib.py line 19 LampCalibration variable
-    c.export()
+c.export()
     
 4. Once saved the edit in Thonny
-    machine.reset()   ...will load the calibration table
+machine.reset()   #...will load the new calibration table
 
 '''
 import Render
