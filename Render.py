@@ -1,30 +1,6 @@
 import machine
 import time
-import LM75
-
-'''TODO list:
-
-[X] - Implement render cycle (values are updated every 0.01, ie 10ms)
-[X] - Implement red ch calibration
-[X] - Test if output is running 100fps
-[X] - Try 200fps
-[X] - 0.08s point chaser (16 step)
-
-[X] - bring over the PWM and Pin assignment
-[X] - Render module to setup.py
-[X] - Automatic Red calibarition read @ 1s, adjust at every 6 sec
-[X] - Artnet on 5600K (100% only calibrated)
-[ ] - WB range (100% only claibrated)
-[X] - WB intensity calibration
-
-[ ] - Colorwheel LUT
-[ ] - Render timing profiling (autospeed?)
-
-[X] - BLE terminal (https://github.com/micropython/micropython/blob/master/examples/bluetooth/ble_uart_repl.py)
-[ ] - Deinit (delete timers)
-
-
-'''
+import calib
 
 # ASSIST FUNCTIONs
 
@@ -99,7 +75,17 @@ class Render():
         
         # init temp calibartion
         self.genRedLut()
-        self.genWBLut()
+        
+        self._calib = []
+        self._calib.append(self.genWBLut(calib._1500K))
+        self._calib.append(self.genWBLut(calib._2000K))
+        self._calib.append(self.genWBLut(calib._2800K))
+        self._calib.append(self.genWBLut(calib._3200K))
+        self._calib.append(self.genWBLut(calib._4800K))
+        self._calib.append(self.genWBLut(calib._5600K))
+        self._calib.append(self.genWBLut(calib._7800K))
+        self._calib.append(self.genWBLut(calib._10K_K))
+        self._calib = tuple(self._calib)
 
         # initiate render function periodically
         self._timer = machine.Timer(1)
@@ -118,7 +104,7 @@ class Render():
         # make lowest 8bit as 10bit had malloc issues
         lowest = int(lowest/4)
 
-        wbBase = list(self._WB5600[lowest])
+        wbBase = list(self._calib[calib._5600K][lowest])
         # add colors
         wbBase[0] += rIn-lowest
         wbBase[1] += gIn-lowest
@@ -169,15 +155,21 @@ class Render():
             lut.append(round(i*0.43)+513)
         self._redLut = tuple(lut)
 
-    def genWBLut(self):
-        calib_5600K = list(self._calib_input[25:30])
-        calib_5600K[0] = (1,)+calib_5600K[0]
-        calib_5600K[1] = (64,)+calib_5600K[1]
-        calib_5600K[2] = (128,)+calib_5600K[2]
-        calib_5600K[3] = (191,)+calib_5600K[3]
-        calib_5600K[4] = (255,)+calib_5600K[4]
+    def genWBLut(self, wb_in):
+        start_time = time.ticks_ms()
         
-        calib = tuple(calib_5600K)
+        #get current WB only values
+        current_wb = list(self._calib_input[5*wb_in:5*(wb_in+1)])
+        
+        #add brightness points into the data
+        current_wb[0] = (1,)+current_wb[0]
+        current_wb[1] = (64,)+current_wb[1]
+        current_wb[2] = (128,)+current_wb[2]
+        current_wb[3] = (191,)+current_wb[3]
+        current_wb[4] = (255,)+current_wb[4]
+        
+        #convert the calibration back into tuple
+        calib = tuple(current_wb)
         #add in the code values in the input table
         out = [(0,0,0,0)]
         #gen WhiteBalance 
@@ -200,7 +192,12 @@ class Render():
             out.append((rOut,gOut,bOut,wOut))
 
         out.append((calib[-1][1],calib[-1][2],calib[-1][2],calib[-1][3]))
-        self._WB5600 = tuple(out)
+        #self._WB5600 = tuple(out)
+        
+        diff = time.ticks_ms()-start_time
+        print("Calibration for 5600K generated in "+str(diff)+"ms")
+        
+        return tuple(out) 
 
     def _render(self, caller):
         
