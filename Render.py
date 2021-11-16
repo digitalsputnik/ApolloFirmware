@@ -84,7 +84,7 @@ class Render():
     _b = 0
     _w = 0
 
-    def __init__(self, temp_sensor=None, rPin=21, gPin=19, bPin=18, wPin=4):
+    def __init__(self, calib, temp_sensor=None, rPin=21, gPin=19, bPin=18, wPin=4):
         # generate hardware PWM outputs per channels
         self._pwm = []
         self._pwm.append(machine.PWM(machine.Pin(rPin)))
@@ -95,6 +95,7 @@ class Render():
 
         # temp sensor
         self._temp_sensor = temp_sensor
+        self._calib_input = calib
         
         # init temp calibartion
         self.genRedLut()
@@ -169,14 +170,23 @@ class Render():
         self._redLut = tuple(lut)
 
     def genWBLut(self):
+        calib_5600K = list(self._calib_input[25:30])
+        calib_5600K[0] = (1,)+calib_5600K[0]
+        calib_5600K[1] = (64,)+calib_5600K[1]
+        calib_5600K[2] = (128,)+calib_5600K[2]
+        calib_5600K[3] = (191,)+calib_5600K[3]
+        calib_5600K[4] = (255,)+calib_5600K[4]
+        
+        calib = tuple(calib_5600K)
+        #add in the code values in the input table
         out = [(0,0,0,0)]
         #gen WhiteBalance 
         for i in range(255):
             i += 1
             # find closest pair
-            key = uFindInTuple(self._wbKeys,0,i)
-            upper = self._wbKeys[key]
-            lower = self._wbKeys[key-1]
+            key = uFindInTuple(calib,0,i)
+            upper = calib[key]
+            lower = calib[key-1]
 
             # get interpolation ratio
             iRatio = int( 1023*( (i-lower[0]) / (upper[0]-lower[0]) ) )
@@ -189,7 +199,7 @@ class Render():
             # append to output
             out.append((rOut,gOut,bOut,wOut))
 
-        out.append((self._wbKeys[-1][1],self._wbKeys[-1][2],self._wbKeys[-1][2],self._wbKeys[-1][3]))
+        out.append((calib[-1][1],calib[-1][2],calib[-1][2],calib[-1][3]))
         self._WB5600 = tuple(out)
 
     def _render(self, caller):
@@ -209,7 +219,7 @@ class Render():
         # advance or reset the the stepper // TODO lambda?
         if self._currentStep == 16:
             localR = self._r
-            localG = self._g
+            localG = self._g #seems to crahs here sometimes...?
             localB = self._b
             localW = self._w
             self.pushRGBW((localR,localG,localB,localW))
@@ -232,3 +242,4 @@ class Render():
         # timing information
         self._renderBudgetMS = time.ticks_diff(self._deadline, time.ticks_ms())
         self._deadline = time.ticks_add(time.ticks_ms(), self.__renderWindowMS)
+

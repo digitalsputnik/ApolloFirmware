@@ -26,7 +26,7 @@ led_temp = LM75(i2c,78)
 # ----- [1] Output objects
 
 # LED output RGBW
-Output = Render.Render(led_temp)
+Output = Render.Render(calib.LampCalibartion,led_temp)
 
 
 # ----- [2] Input objects
