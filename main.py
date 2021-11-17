@@ -4,6 +4,7 @@ import time
 import Render
 import machine
 import calib
+import os
 from Lib.micropython_dotstar import DotStar as apa102
 
 # ----- start of Empire modules init -------
@@ -20,7 +21,7 @@ program_button = machine.Pin(35, machine.Pin.IN, machine.Pin.PULL_UP)
 
 # i2c
 i2c = machine.SoftI2C(scl=machine.Pin(22), sda=machine.Pin(23))
-spi = machine.SoftSPI(sck=machine.Pin(26), mosi=machine.Pin(25), miso=machine.Pin(35))
+spi = machine.SoftSPI(sck=machine.Pin(26), mosi=machine.Pin(25), miso=machine.Pin(0))
 
 # fan @ pin(0)
 fan = machine.PWM(machine.Pin(0),duty=255)
@@ -32,11 +33,12 @@ led_temp = LM75(i2c,78)
 # ----- [1] Output objects
 
 # LED output RGBW
-Output = Render.Render(calib.LampCalibartion,led_temp)
+#Output = Render.Render(calib.LampCalibartion,led_temp)
 
 # APA102 indicator
 APA102 = apa102(spi,6)
-#card = machine.SDCard(width=1, slot=2,freq=20000000)
+#card = machine.SDCard(width=1, slot=3)
+#os.mount(card,"/sd")
 
 # ----- [2] Input objects
 
