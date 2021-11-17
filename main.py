@@ -27,7 +27,7 @@ spi = machine.SoftSPI(sck=machine.Pin(26), mosi=machine.Pin(25), miso=machine.Pi
 fan = machine.PWM(machine.Pin(0),duty=255)
 
 # Sensors
-led_temp = LM75(i2c,78)
+led_temp = LM75(i2c,79)
 
 
 # ----- [1] Output objects
@@ -37,6 +37,8 @@ led_temp = LM75(i2c,78)
 
 # APA102 indicator
 APA102 = apa102(spi,6)
+# APA102[0]=(255,0,0) #1st led green channel on
+# APA102.fill((10,10,10)) # all leds on low intencity
 #card = machine.SDCard(width=1, slot=3)
 #os.mount(card,"/sd")
 
