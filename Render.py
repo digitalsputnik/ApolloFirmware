@@ -60,7 +60,7 @@ class Render():
     _b = 0
     _w = 0
 
-    def __init__(self, calib, temp_sensor=None, rPin=21, gPin=19, bPin=18, wPin=4):
+    def __init__(self, calib_in, temp_sensor=None, rPin=21, gPin=19, bPin=18, wPin=4):
         # generate hardware PWM outputs per channels
         self._pwm = []
         self._pwm.append(machine.PWM(machine.Pin(rPin)))
@@ -71,20 +71,20 @@ class Render():
 
         # temp sensor
         self._temp_sensor = temp_sensor
-        self._calib_input = calib
+        self._calib_input = calib_in
         
         # init temp calibartion
         self.genRedLut()
         
         self._calib = []
-        self._calib.append(self.genWBLut(calib._1500K))
-        self._calib.append(self.genWBLut(calib._2000K))
-        self._calib.append(self.genWBLut(calib._2800K))
-        self._calib.append(self.genWBLut(calib._3200K))
-        self._calib.append(self.genWBLut(calib._4800K))
-        self._calib.append(self.genWBLut(calib._5600K))
-        self._calib.append(self.genWBLut(calib._7800K))
-        self._calib.append(self.genWBLut(calib._10K_K))
+        self._calib.append(self.genWBLut(calib.calib._1500K))
+        self._calib.append(self.genWBLut(calib.calib._2000K))
+        self._calib.append(self.genWBLut(calib.calib._2800K))
+        self._calib.append(self.genWBLut(calib.calib._3200K))
+        self._calib.append(self.genWBLut(calib.calib._4800K))
+        self._calib.append(self.genWBLut(calib.calib._5600K))
+        self._calib.append(self.genWBLut(calib.calib._7800K))
+        self._calib.append(self.genWBLut(calib.calib._10K_K))
         self._calib = tuple(self._calib)
 
         # initiate render function periodically
@@ -104,7 +104,7 @@ class Render():
         # make lowest 8bit as 10bit had malloc issues
         lowest = int(lowest/4)
 
-        wbBase = list(self._calib[calib._5600K][lowest])
+        wbBase = list(self._calib[calib.calib._5600K][lowest])
         # add colors
         wbBase[0] += rIn-lowest
         wbBase[1] += gIn-lowest
@@ -169,16 +169,16 @@ class Render():
         current_wb[4] = (255,)+current_wb[4]
         
         #convert the calibration back into tuple
-        calib = tuple(current_wb)
+        current_calib = tuple(current_wb)
         #add in the code values in the input table
         out = [(0,0,0,0)]
         #gen WhiteBalance 
         for i in range(255):
             i += 1
             # find closest pair
-            key = uFindInTuple(calib,0,i)
-            upper = calib[key]
-            lower = calib[key-1]
+            key = uFindInTuple(current_calib,0,i)
+            upper = current_calib[key]
+            lower = current_calib[key-1]
 
             # get interpolation ratio
             iRatio = int( 1023*( (i-lower[0]) / (upper[0]-lower[0]) ) )
@@ -191,11 +191,11 @@ class Render():
             # append to output
             out.append((rOut,gOut,bOut,wOut))
 
-        out.append((calib[-1][1],calib[-1][2],calib[-1][2],calib[-1][3]))
+        out.append((current_calib[-1][1],current_calib[-1][2],current_calib[-1][2],current_calib[-1][3]))
         #self._WB5600 = tuple(out)
         
         diff = time.ticks_ms()-start_time
-        print("Calibration for 5600K generated in "+str(diff)+"ms")
+        print("Calibration for "+calib.calib._lut[wb_in]+" generated in "+str(diff)+"ms")
         
         return tuple(out) 
 
@@ -226,6 +226,13 @@ class Render():
         # output
         # add 30C to adjust for the -30C starting point
         currentTemp = self._temp_sensor.read()
+        
+        # sometimes get wierd sh*t from the temp sensor, if the fix works needs to move to temp sensor lib
+        if currentTemp > (1022-300):
+            currentTemp = 1022-300
+        if currentTemp < 0:
+            currentTemp = 0
+        
         compensatedRed = self._redLut[currentTemp+300]*localR>>10
         if self._tempCompEnable:
             self._pwm[0].duty(compensatedRed) # calibrate the Red CH

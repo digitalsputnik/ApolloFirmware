@@ -27,13 +27,13 @@ spi = machine.SoftSPI(sck=machine.Pin(26), mosi=machine.Pin(25), miso=machine.Pi
 fan = machine.PWM(machine.Pin(0),duty=255)
 
 # Sensors
-led_temp = LM75(i2c,79)
+led_temp = LM75(i2c,78)
 
 
 # ----- [1] Output objects
 
 # LED output RGBW
-#Output = Render.Render(calib.LampCalibartion,led_temp)
+Output = Render.Render(calib.LampCalibartion,led_temp)
 
 # APA102 indicator
 APA102 = apa102(spi,6)
@@ -45,7 +45,7 @@ APA102 = apa102(spi,6)
 # ----- [2] Input objects
 
 # WiFi
-#wifiAp()
+wifiAp()
 #wifiConnect("DS","SputnikulOn4Antenni")
 
 
@@ -63,7 +63,7 @@ enable_all = machine.Pin(27, machine.Pin.OUT, value=1)
 
 
 
-'''
+# ----- [X] Try new and wierd stuff here:
 def toggleArtnetBoot():
     if db[b"ArtNet"] == b"On":
         db[b"ArtNet"] = b"Off"
@@ -75,7 +75,17 @@ def toggleArtnetBoot():
         db.close()
         f.write("mydb")
         machine.reset()    
+# apa animation
 
+apa_array= ((0,0,32),(2,0,16),(4,0,8),(8,0,4),(16,0,2),(32,0,0))
+APA102[0] = apa_array[0]
+APA102[1] = apa_array[1]
+APA102[2] = apa_array[2]
+APA102[3] = apa_array[3]
+APA102[4] = apa_array[4]
+APA102[5] = apa_array[5]
+
+'''
 def run_server(saddr, port):
     sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
     sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
