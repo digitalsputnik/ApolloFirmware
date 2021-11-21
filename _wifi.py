@@ -1,0 +1,1 @@
+_wifi = (0,"Kodu","maja24katus",5)

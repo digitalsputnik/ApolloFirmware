@@ -20,7 +20,7 @@ db = btree.open(f)
 deviceId =  db[b"Name"]
 
 # Define WiFi functionality
-def wifiConnect(ap,passw):
+def wifiConnect(ap,passw,timeout,reset_callback):
     global sta_if
     sta_if = network.WLAN(network.STA_IF)
 
@@ -29,8 +29,12 @@ def wifiConnect(ap,passw):
         sta_if.active(True)
         sta_if.connect(ap, passw)
         # create timer task to check connection and repair any issues
+        counter = 0
         while not sta_if.isconnected():
-            time.sleep(0.3)
+            time.sleep(0.5)
+            counter +=1
+            if counter>=(timeout*2):
+                reset_callback(0)
             print(".", end=" ")
 
     print("")

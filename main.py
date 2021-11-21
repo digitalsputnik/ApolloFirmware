@@ -18,37 +18,60 @@ from Empire.E_uLM75 import E_uLM75 as LM75
 # buttons
 debounce_deadline=time.ticks_ms()
 
+# Power button:
 def onoff_handler(caller):
     global c, _on, debounce_deadline
+    #0.5sec debounce (the dome switch is slow to pop back therefore would create 2 clicks through bouncing
     if time.ticks_diff(time.ticks_ms(),debounce_deadline) > 0:
         debounce_deadline = time.ticks_add(time.ticks_ms(), 500)
+        # if _color exists delete it
+        # create a new file with the updated data
+        try:
+            os.remove("_color.py")
+        except Exception as e:
+            pass
+        myfile = open ("_color.py", "w")
+        
+        # If lamp was switched on, it will be switched off
         if _on:
-            try:
-                os.remove("_color.py")
-            except Exception as e:
-                pass
-            myfile = open ("_color.py", "w")
             myfile.write("c="+str(Output._rgbt)+"\n")
             myfile.write("_on = False")
-            myfile.close()
             enable_all.off()
             _on = False
+        # If lamp was switched off, it will be switched on
         else:
-            try:
-                os.remove("_color.py")
-            except Exception as e:
-                pass
-            myfile = open ("_color.py", "w")
             myfile.write("c="+str(c)+"\n")
             myfile.write("_on = True")
-            myfile.close()
             enable_all.on()
             _on = True
+        # need to close the file otherwise it might not get written properly
+        myfile.close()
     
 power_button = machine.Pin(35, machine.Pin.IN, machine.Pin.PULL_UP)
 power_button.irq(trigger = machine.Pin.IRQ_FALLING, handler = onoff_handler)
 
+#Program Button
+def programm_handler(caller):
+    global debounce_deadline, _wifi
+    if time.ticks_diff(time.ticks_ms(),debounce_deadline) > 0:
+        debounce_deadline = time.ticks_add(time.ticks_ms(), 500)
+        print(str(_wifi[0]))
+        try:
+            os.remove("_wifi.py")
+        except Exception as e:
+            pass
+        myfile = open ("_wifi.py", "w")
+        
+        if _wifi[0]==0:
+            myfile.write("_wifi = (1,'"+_wifi[1]+"','"+_wifi[2]+"',"+str(_wifi[3])+")")
+        if _wifi[0]==1:
+            myfile.write("_wifi = (0,'"+_wifi[1]+"','"+_wifi[2]+"',"+str(_wifi[3])+")")
+            
+        myfile.close()
+        machine.reset()
+    
 program_button = machine.Pin(34, machine.Pin.IN, machine.Pin.PULL_UP)
+program_button.irq(trigger = machine.Pin.IRQ_FALLING, handler = programm_handler)
 
 # i2c
 i2c = machine.SoftI2C(scl=machine.Pin(22), sda=machine.Pin(23))
@@ -89,14 +112,20 @@ APA102 = apa102(spi,6)
 # wroom kit
 #card = machine.SDCard(slot=3, width=1, sck=machine.Pin(14), cs=machine.Pin(13), miso=machine.Pin(2), mosi=machine.Pin(15))
 #card = machine.SDCard(slot=3) #eidf dokumentatsioonis on 
-
 #os.mount(card,"/sd")
 
 # ----- [2] Input objects
 
 # WiFi
-wifiAp()
-#wifiConnect("DS","SputnikulOn4Antenni")
+try:
+    from _wifi import _wifi
+except Exception as e:
+    _wifi=(0,"Apollo","dsputnik",30,programm_handler)
+    
+if _wifi[0]==0:
+    wifiAp()
+if _wifi[0]==1:
+    wifiConnect(_wifi[1],_wifi[2],_wifi[3],programm_handler)
 
 
 
