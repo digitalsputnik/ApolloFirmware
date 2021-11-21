@@ -39,7 +39,7 @@ Output = Render.Render(calib.LampCalibartion,led_temp)
 APA102 = apa102(spi,6)
 # APA102[0]=(255,0,0) #1st led green channel on
 # APA102.fill((10,10,10)) # all leds on low intencity
-#card = machine.SDCard(width=1, slot=3)
+#card = machine.SDCard(width=1, slot=3, sck=machine.Pin(14), cs=machine.Pin(15), miso=machine.Pin(12), mosi=machine.Pin(13))
 #os.mount(card,"/sd")
 
 # ----- [2] Input objects
