@@ -2,25 +2,32 @@
 Toolset for calibrating the lamp
 Output is DS_Render output object for driving the leds while calibrating
 
-to start:
-import calib
+Calibration is done using commands in the shell. This tutorial
+should explain which commands and how to use them.
+
+to start type:
 c = calib.calib()
 
-1. Calibrate all intesity levels for all WB (1500K-10 000K) by changing offset
+1. Calibrate all intesity levels for all WB (1500K-10 000K)
+Calibration is done by updating offset.
+
 c.update(Kelvin,Intensity,offset=(r,g,b,w),Output)
 
 offset is changed in steps, new offset values are added to the previous one.
 
-Examples:
+To see current values for a specific WB, update offset with 0 values:
 c.update(c._5600K,c._intensity_100,offset=(0,0,0,0),output=Output)
-c.update(c._5600K,c._intensity_75,offset=(0,0,0,0),output=Output)
-..
-c.update(c._5600K,c._intensity_0,offset=(0,0,0,0),output=Output)
 
-c.update(c._3200K,c._intensity_100,offset=(0,0,0,0),output=Output)
-c.update(c._3200K,c._intensity_75,offset=(0,0,0,0),output=Output)
+Examples:
+c.update(c._5600K,c._intensity_100,offset=(20,0,0,0),output=Output)
+c.update(c._5600K,c._intensity_75,offset=(0,20,0,0),output=Output)
 ..
-c.update(c._3200K,c._intensity_0,offset=(0,0,0,0),output=Output)
+c.update(c._5600K,c._intensity_0,offset=(0,0,-10,0),output=Output)
+
+c.update(c._3200K,c._intensity_100,offset=(0,15,0,0),output=Output)
+c.update(c._3200K,c._intensity_75,offset=(0,5,0,0),output=Output)
+..
+c.update(c._3200K,c._intensity_0,offset=(-25,0,0,0),output=Output)
 
 Example output (after using c.update() as shown above):
 lux range: 7220 - 7514
@@ -33,21 +40,25 @@ compare these values to values shown by Sekonic
 and change offsets using c.update()[shown above]
 until lamp values are in between preferred ranges. 
 
-2. Export output and copy to the calib.py line 51 LampCalibration variable
+2. Export output and copy to the calib.py line 69 LampCalibration variable
 c.export()
     
-3. Once saved the edit in Thonny
+3. Once you've saved the edit in Thonny
 machine.reset()   #...will load the new calibration table
 
 4. To check if calibration was successful, use
 Output.setColor(R,G,B) with any values and check
 Lux, WB and dUV values on the Sekonic
+They should remain in the previously shown ranges
 
 This tutorial and calibration was made using Sekonic c-7000
 To use this model of Sekonic, select Spectrum on the Sekonic main screen
 After that you should be presented with three values [Tcp(Kelvin),dUV,lux]
 To measure current lamp values press the Measure button on the side
 of the device.
+Alternatively you can attach the back battery shield, which should
+make the Sekonic update it's values automatically without having to
+press the Measure button
 
 '''
 import Render
