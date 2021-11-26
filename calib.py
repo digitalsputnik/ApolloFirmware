@@ -2,7 +2,7 @@
 Toolset for calibrating the lamp
 Output is DS_Render output object for driving the leds while calibrating
 
-Calibration is done using commands in the shell. This tutorial
+Calibration is done using commands in the shell (bottom half of the Thonny screen). This tutorial
 should explain which commands and how to use them.
 
 to start type:
