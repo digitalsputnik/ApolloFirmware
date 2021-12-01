@@ -5,7 +5,6 @@ import calib
 # ASSIST FUNCTIONs
 
 '''uLerp: intger interpolation for 10bit input and blend
-
 uLerp is ultra simple interpolation, only by simplest archmetic for fas interpolation
 '''
 def uLerp(a:int, b:int, position:int):
@@ -33,15 +32,13 @@ def uFindInTuple(inputTuple, location, value):
 # MAIN OBJECT
 
 class Render():
-    __renderWindowMS = 10
+    __renderWindowMS = 5
     __PWM = 19000
 
     #_wbKeys = ((1, 3, 1, 1, 10), (25, 217, 167, 56, 225), (50, 425, 504, 113, 450), (75, 653, 736, 169, 675), (100, 870, 960, 225, 900))
     # key point in 8bit
    #_wbKeys = ((1, 3, 1, 1, 10), (64, 210, 265, 56, 200), (128, 425, 504, 113, 450), (191, 653, 736, 169, 675), (255, 870, 960, 225, 900))
     _wbKeys = ((1, 3, 2, 1, 10), (64, 220, 310, 56, 180), (128, 445, 580, 113, 420), (191, 653, 830, 169, 575), (255, 820, 999, 200, 900))
-
-    _rgbt = (0,0,0,0)
 
     _rInput = 0
     _gInput = 0
@@ -99,16 +96,46 @@ class Render():
 
 
     def setColor(self, rIn=0, gIn=0, bIn=0, wbIn=5600):
-        # settings to save
-        self._rgbt = (rIn,gIn,bIn,wbIn)
         # get white component
-        inputs = [1023,1023,1023,1023]
-        inputs = [rIn*4, gIn*4, bIn*4, wbIn*4]
+        inputs = [rIn*4, gIn*4, bIn*4]
         lowest = min((inputs))
         # make lowest 8bit as 10bit had malloc issues
         lowest = int(lowest/4)
-
-        wbBase = list(self._calib[calib.calib._5600K][lowest])
+        
+        ranges = [500,800,400,1600,800,2200,2200]
+        values = [1500,2000,2800,3200,4800,5600,7800,10000]
+        
+        temp_base = calib.calib._1500K
+        
+        if wbIn>=2000:
+            temp_base = calib.calib._2000K
+        if wbIn>=2800:
+            temp_base = calib.calib._2800K
+        if wbIn>=3200:
+            temp_base = calib.calib._3200K
+        if wbIn>=4800:
+            temp_base = calib.calib._4800K
+        if wbIn>=5600:
+            temp_base = calib.calib._5600K
+        if wbIn>=7800:
+            temp_base = calib.calib._7800K
+        
+        # to avoid overflow
+        if wbIn>10000:
+            wbIn = 10000
+        
+        overflow = wbIn-values[temp_base]
+        overflow1024 = int(overflow/ranges[temp_base]*1023)
+        
+        wbBaseA = list(self._calib[temp_base][lowest])
+        wbBaseB = list(self._calib[temp_base+1][lowest])
+        
+        wbBase = [0,0,0,0]
+        wbBase[0] = uLerp(wbBaseA[0],wbBaseB[0],overflow1024)
+        wbBase[1] = uLerp(wbBaseA[1],wbBaseB[1],overflow1024)
+        wbBase[2] = uLerp(wbBaseA[2],wbBaseB[2],overflow1024)
+        wbBase[3] = uLerp(wbBaseA[3],wbBaseB[3],overflow1024)
+        
         # add colors
         wbBase[0] += rIn-lowest
         wbBase[1] += gIn-lowest
@@ -250,4 +277,3 @@ class Render():
         # timing information
         self._renderBudgetMS = time.ticks_diff(self._deadline, time.ticks_ms())
         self._deadline = time.ticks_add(time.ticks_ms(), self.__renderWindowMS)
-
