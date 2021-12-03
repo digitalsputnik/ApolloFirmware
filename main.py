@@ -5,7 +5,6 @@ import Render
 import machine
 import calib
 import os
-import boot
 from Lib.micropython_dotstar import DotStar as apa102
 
 # ----- start of Empire modules init -------
