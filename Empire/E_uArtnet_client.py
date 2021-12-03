@@ -39,8 +39,8 @@ class E_uArtnet_client:
                     # data integrity checking
                     AN_header = data[0:7]
                     AN_opcode = data[8:10]
-                    AN_length = data[17]
                     AN_universe = data[14:16]
+                    AN_length = data[17]
                     
                     check_state = 0
                     # check packet type

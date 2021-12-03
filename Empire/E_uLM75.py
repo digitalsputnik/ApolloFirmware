@@ -30,7 +30,7 @@ class E_uLM75(object):
             self._last_results = (int(temp[0]), floor(int(temp[1]) / 23))
             return int(self._last_results[0]*10+self._last_results[1])
         except Exception as e:
-            self._error = E
+            self._error = e
             time.sleep(0.01)
             return 220 # Average room temperature is 22 degrees celcius
         
