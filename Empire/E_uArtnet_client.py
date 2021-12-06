@@ -1,5 +1,6 @@
 import socket
 import _thread
+import time
 
 class E_uArtnet_client:
     '''Ultra simple Art-Net client 
@@ -25,6 +26,9 @@ class E_uArtnet_client:
 
         _thread.start_new_thread(self.udp_reader_loop,())
         print("ArtNet: started")
+
+    def change_start_offset(self, start_offset):
+        self._start = start_offset
 
     def udp_reader_loop(self):
         if self._die:
@@ -64,3 +68,4 @@ class E_uArtnet_client:
                     
             except Exception as e:
                 print(e)
+                time.sleep(0.1)
