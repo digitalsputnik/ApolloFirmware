@@ -21,10 +21,10 @@ start_timer_bool = False
 wifi_connected = False
 
 artnet_offset = 0
-artnet_offset = pysaver.load("artnet_offset")
+artnet_offset = pysaver.load("artnet_offset")[0]
 
 ap_mode = True
-ap_mode = pysaver.load("ap_mode")
+ap_mode = pysaver.load("ap_mode")[0]
 
 # ----- [0] Hardware interfaces
 
@@ -121,6 +121,7 @@ Output = Render.Render(calib.LampCalibartion,led_temp)
 
 # APA102 indicator
 APA102 = apa102(spi,6)
+update_apa_leds()
 # APA102[0]=(255,0,0) #1st led green channel on
 # APA102.fill((10,10,10)) # all leds on low intencity
 #card = machine.SDCard(width=1, slot=3)
@@ -162,5 +163,3 @@ ArtNetClientD = ArtNet(callback=artNetCallback, start=artnet_offset, debug=True)
 # ----- [9] Software
 #time.sleep(2)
 enable_all = machine.Pin(27, machine.Pin.OUT, value=1)  
-
-update_apa_leds()

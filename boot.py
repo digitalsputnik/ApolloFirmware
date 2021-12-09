@@ -9,7 +9,7 @@ import pysaver
 # disable all outputs to avoid blinking during setup 
 machine.Pin(27, machine.Pin.OUT, value=0)
 
-deviceId = pysaver.load("name")
+deviceId = pysaver.load("name")[0]
 
 # Define WiFi functionality
 def wifiConnect(ap,passw,callback):
