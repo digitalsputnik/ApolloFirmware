@@ -166,7 +166,7 @@ def load_unit_test(name, value):
             else:
                 return ("Loaded value incorrect", False)
         else:
-            # If an error occurred while usind pysaver.save(), the error
+            # If an error occurred while using pysaver.save(), the error
             # is returned in the result tuple as a first value
             return (loaded_value[0], False)
     except Exception as e:
