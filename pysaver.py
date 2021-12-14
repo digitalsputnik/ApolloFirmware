@@ -14,6 +14,7 @@ def save(save_variable_name, save_variable, debug = False):
             return ("Success", True)
     except Exception as e:
         if not debug:
+            print (str(e))
             return False
         else:
             return (str(e), False)

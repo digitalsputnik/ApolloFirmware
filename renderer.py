@@ -1,7 +1,7 @@
 import uasyncio as asyncio
 
-async def setup():
+async def __setup__():
     print("render setup")
 
-async def loop():
+async def __slowloop__():
     print("rendering")

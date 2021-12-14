@@ -1,22 +1,15 @@
 import uasyncio as asyncio
-import machine
 import network
-import time
 import pysaver
 
-connect_wifi_flag = asyncio.ThreadSafeFlag()
-set_ap_flag = asyncio.ThreadSafeFlag()
 mode_changed_flag = asyncio.ThreadSafeFlag()
-get_status_flag = asyncio.ThreadSafeFlag()
 
 is_ap = pysaver.load("is_ap")
 device_id = pysaver.load("device_id")
     
-async def setup():
+async def __setup__():
     asyncio.create_task(toggle_network_mode_loop())
-    asyncio.create_task(connect_loop())
-    asyncio.create_task(set_ap_loop())
-    asyncio.create_task(get_status_loop())
+    
     if is_ap:
         await set_ap()
     else:
@@ -30,30 +23,6 @@ async def toggle_network_mode_loop():
         #pysaver.save("is_ap", is_ap)
         #machine.reset()
         print("Network Mode Changed. Is ap - " + str(is_ap))
-        
-async def connect_loop():
-    global is_ap
-    while True:
-        await connect_wifi_flag.wait()
-        is_ap = False
-        #pysaver.save("is_ap", is_ap)
-        #machine.reset()
-        print("Setting client. Is ap - " + str(is_ap))
-        
-async def set_ap_loop():
-    global is_ap
-    while True:
-        await set_ap_flag.wait()
-        is_ap = True
-        #pysaver.save("is_ap", is_ap)
-        #machine.reset()
-        print("Setting ap. Is ap - " + str(is_ap))
-        
-async def get_status_loop():
-    global is_ap
-    while True:
-        await get_status_flag.wait()
-        print("Is ap - " + str(is_ap))
 
 async def set_ap():
     global sta_if, device_id
@@ -87,7 +56,7 @@ async def connect(ssid,pw,callback=None):
         print('connecting to network...')
         sta_if.connect(ap, passw)
         while not sta_if.isconnected():
-            time.sleep(0.3)
+            await asyncio.sleep(0.3)
             print(". ", end=" ")
     
     if callback != None:

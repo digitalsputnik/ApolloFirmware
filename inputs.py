@@ -1,6 +1,5 @@
 import machine
 import time
-import os
 import wifi
 
 # Button Pins
@@ -8,10 +7,10 @@ power_pin = 22
 program_pin = 23
 
 # Button actions
-power_short = wifi.connect_wifi_flag.set
-power_long = wifi.set_ap_flag.set
-program_short = wifi.mode_changed_flag.set
-program_long = wifi.get_status_flag.set
+power_short = None
+power_long = None
+program_short = None
+program_long = wifi.mode_changed_flag.set
 
 start_power_debouce_timer = False
 start_program_debouce_timer = False
@@ -19,7 +18,7 @@ start_program_debouce_timer = False
 # Debouncing needs work
 debounce_deadline=time.ticks_ms()
 
-async def setup():
+async def __setup__():
     global power_pin, program_pin
     setup_power_button(power_pin, power_button_click)
     setup_program_button(program_pin, program_button_click)
@@ -36,7 +35,7 @@ def program_button_click(caller):
         debounce_deadline = time.ticks_add(time.ticks_ms(), 500)
         start_program_debouce_timer = True
 
-async def loop():
+async def __loop__():
     global start_program_debouce_timer, start_power_debouce_timer
     
     if start_power_debouce_timer:

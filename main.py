@@ -1,14 +1,9 @@
 import uasyncio as asyncio
-import wifi
-import inputs
-import renderer
 
 default_main_loop_frequency = 0.1
 default_side_loop_frequency = 1
 
-setup_tasks = [wifi.setup, inputs.setup, renderer.setup]
-main_tasks = [inputs.loop]
-side_tasks = [renderer.loop]
+import_modules = ["inputs", "wifi", "renderer"]
 
 async def main_loop(frequency = default_main_loop_frequency):
     global main_tasks, main_frequency
@@ -27,7 +22,27 @@ async def side_loop(frequency = default_side_loop_frequency):
         await asyncio.sleep(side_frequency)
 
 async def setup():
-    global setup_tasks
+    global setup_tasks, import_modules, setup_tasks, main_tasks, side_tasks
+    
+    setup_tasks = []
+    main_tasks = []
+    side_tasks = []
+    
+    for import_module in import_modules:
+        imported_module = __import__(import_module)
+        
+        setup = getattr(imported_module, "__setup__", None)
+        if callable(setup):
+            setup_tasks.append(setup)
+            
+        loop = getattr(imported_module, "__loop__", None)
+        if callable(loop):
+            main_tasks.append(loop)
+            
+        slow_loop = getattr(imported_module, "__slowloop__", None)
+        if callable(slow_loop):
+            side_tasks.append(slow_loop)
+    
     for task in setup_tasks:
         await asyncio.create_task(task())
     
