@@ -1,6 +1,7 @@
 import machine
 import time
 import wifi
+import artnet_client
 
 # Button Pins
 power_pin = 22
@@ -9,13 +10,13 @@ program_pin = 23
 # Button actions
 power_short = None
 power_long = None
-program_short = None
+program_short = artnet_client.artnet_toggled_flag.set
 program_long = wifi.mode_changed_flag.set
 
 start_power_debouce_timer = False
 start_program_debouce_timer = False
 
-# Debouncing needs work
+# Debouncing needs work, should remove all time.sleep()'s
 debounce_deadline=time.ticks_ms()
 
 async def __setup__():

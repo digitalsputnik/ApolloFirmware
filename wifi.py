@@ -8,14 +8,14 @@ is_ap = pysaver.load("is_ap")
 device_id = pysaver.load("device_id")
     
 async def __setup__():
-    asyncio.create_task(toggle_network_mode_loop())
+    asyncio.create_task(toggle_network_mode_waiter())
     
     if is_ap:
         await set_ap()
     else:
         await connect_to_smallest_apollo()
         
-async def toggle_network_mode_loop():
+async def toggle_network_mode_waiter():
     global is_ap
     while True:
         await mode_changed_flag.wait()
@@ -30,7 +30,7 @@ async def set_ap():
     sta_if.active(True)
     sta_if.config(essid=device_id, authmode=network.AUTH_WPA_WPA2_PSK, password="dsputnik")
 
-    print('\nnetwork config:', sta_if.ifconfig())
+    print('\nNetwork config:', sta_if.ifconfig())
 
 async def connect_to_smallest_apollo(callback=None):
     apollo_found = False
@@ -53,15 +53,15 @@ async def connect_to_smallest_apollo(callback=None):
 async def connect(ssid,pw,callback=None):
     global sta_if
     if not sta_if.isconnected():
-        print('connecting to network...')
-        sta_if.connect(ap, passw)
+        print('Connecting to network...')
+        sta_if.connect(ssid, pw)
         while not sta_if.isconnected():
             await asyncio.sleep(0.3)
             print(". ", end=" ")
     
     if callback != None:
         callback(sta_if.isconnected())
-    print('\nnetwork config:', sta_if.ifconfig())
+    print('\nNetwork config:', sta_if.ifconfig())
 
 def scan_ssids():
     global sta_if
