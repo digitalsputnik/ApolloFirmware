@@ -1,6 +1,0 @@
-PySaver save passed with type <class 'int'>
-PySaver save passed with type <class 'str'>
-PySaver save passed with type <class 'tuple'>
-PySaver load passed with type <class 'int'>
-PySaver load passed with type <class 'str'>
-PySaver load passed with type <class 'tuple'>
