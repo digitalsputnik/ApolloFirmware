@@ -5,8 +5,8 @@
 
 import uasyncio as asyncio
 import utime as time
-from helpers import launch
-from delay_ms import Delay_ms
+from Lib.helpers import launch
+from Lib.delay_ms import Delay_ms
 
 
 # An alternative Pushbutton solution with lower RAM use is available here

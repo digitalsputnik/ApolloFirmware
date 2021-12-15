@@ -1,6 +1,6 @@
 from machine import Pin
 import uasyncio as asyncio
-from pushbutton import Pushbutton
+from Lib.pushbutton import Pushbutton
 import artnet_client
 import wifi
 

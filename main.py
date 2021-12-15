@@ -3,7 +3,7 @@ import uasyncio as asyncio
 default_main_loop_frequency = 0.1
 default_side_loop_frequency = 1
 
-import_modules = ["inputs", "wifi", "artnet_client"]
+import_modules = ["inputs", "wifi", "Empire/artnet_client"]
 
 async def main_loop(frequency = default_main_loop_frequency):
     global main_tasks, main_frequency
