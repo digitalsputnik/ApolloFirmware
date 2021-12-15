@@ -1,8 +1,8 @@
 import uasyncio as asyncio
+import machine
 import network
 import pysaver
-
-mode_changed_flag = asyncio.ThreadSafeFlag()
+import flags
 
 is_ap = pysaver.load("is_ap")
 device_id = pysaver.load("device_id")
@@ -18,10 +18,10 @@ async def __setup__():
 async def toggle_network_mode_waiter():
     global is_ap
     while True:
-        await mode_changed_flag.wait()
+        await flags.program_long_flag.wait()
         is_ap = not is_ap
-        #pysaver.save("is_ap", is_ap)
-        #machine.reset()
+        pysaver.save("is_ap", is_ap)
+        machine.reset()
         print("Network Mode Changed. Is ap - " + str(is_ap))
 
 async def set_ap():

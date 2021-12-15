@@ -1,12 +1,12 @@
-# loop disabled buttons currently, don't know yet why
-
 import uasyncio as asyncio
 import socket
 import pysaver
+import flags
 
-artnet_toggled_flag = asyncio.ThreadSafeFlag()
+server = '0.0.0.0'
+port = 6454
 
-artnet_start_offset = 0
+artnet_start_offset = pysaver.load("artnet_start_offset")
 artnet_length = 4
 
 callback = None
@@ -16,13 +16,14 @@ async def __setup__():
     asyncio.create_task(toggle_artnet_offset_waiter())
     
     _socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-    _socket.bind(("0.0.0.0",6454))
-    print("Art-Net Started")
+    _socket.bind((server,port))
+    _socket.setblocking(False)
+    print("Art-Net Started. Offset - " + str(artnet_start_offset))
 
 async def toggle_artnet_offset_waiter():
     global artnet_start_offset
     while True:
-        await artnet_toggled_flag.wait()
+        await flags.program_short_flag.wait()
         
         artnet_start_offset += 5
         if (artnet_start_offset == 30):
@@ -31,7 +32,7 @@ async def toggle_artnet_offset_waiter():
         pysaver.save("artnet_start_offset", artnet_start_offset)
         print("Art-Net Offset Changed - " + str(artnet_start_offset))
 
-async def __loop__disabled():
+async def __loop__():
     global _socket, artnet_start_offset, callback
     try:
         data, addr = _socket.recvfrom(1024)
@@ -59,5 +60,4 @@ async def __loop__disabled():
                     print(str(complete_data[0]) + ", " + str(complete_data[1]) + ", " + str(complete_data[2]) + ", " + str(complete_data[3]))
               
     except Exception as e:
-        print(str(e))
-        await asyncio.sleep(0.1)
+        await asyncio.sleep(0)
