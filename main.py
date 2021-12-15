@@ -3,7 +3,7 @@ import uasyncio as asyncio
 main_loop_frequency = 0.1
 side_loop_frequency = 1
 
-import_modules = ['inputs', 'wifi', 'artnet_client']
+import_modules = ['inputs', 'wifi', 'artnet_client', 'renderer']
 
 async def main_loop(frequency = main_loop_frequency):
     global main_tasks, main_frequency

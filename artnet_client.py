@@ -54,10 +54,19 @@ async def __loop__():
                 dataStart = 18 + artnet_start_offset
                 dataEnd = 18 + artnet_start_offset + artnet_length
                 complete_data = data[dataStart:dataEnd]
+                
+                red = complete_data[0]*4
+                green = complete_data[1]*4
+                blue = complete_data[2]*4
+                white = complete_data[3]*33.33334+1500
+                
+                if white > 10000:
+                    white = 10000
+                
                 if callback != None:
-                    callback(complete_data)
+                    callback(red,green,blue,white)
                 else:
-                    print(str(complete_data[0]) + ", " + str(complete_data[1]) + ", " + str(complete_data[2]) + ", " + str(complete_data[3]))
+                    print(str(red) + ", " + str(green) + ", " + str(blue) + ", " + str(white))
               
     except Exception as e:
         await asyncio.sleep(0)
