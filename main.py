@@ -3,14 +3,14 @@ import uasyncio as asyncio
 default_main_loop_frequency = 0.1
 default_side_loop_frequency = 1
 
-import_modules = ["inputs", "wifi", "Empire/artnet_client"]
+import_modules = ['inputs', 'wifi', 'artnet_client']
 
 async def main_loop(frequency = default_main_loop_frequency):
     global main_tasks, main_frequency
     main_frequency = frequency
     while True:
         for task in main_tasks:
-            await asyncio.create_task(task())
+            asyncio.create_task(task())
         await asyncio.sleep(main_frequency)
         
 async def side_loop(frequency = default_side_loop_frequency):
@@ -18,7 +18,7 @@ async def side_loop(frequency = default_side_loop_frequency):
     side_frequency = frequency
     while True:
         for task in side_tasks:
-            await asyncio.create_task(task())
+            asyncio.create_task(task())
         await asyncio.sleep(side_frequency)
 
 async def setup():
@@ -44,7 +44,7 @@ async def setup():
             side_tasks.append(slow_loop)
     
     for task in setup_tasks:
-        await asyncio.create_task(task())
+        asyncio.create_task(task())
     
     main = asyncio.create_task(main_loop())
     side = asyncio.create_task(side_loop())
