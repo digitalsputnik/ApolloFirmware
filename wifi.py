@@ -59,7 +59,7 @@ async def connect(ssid,pw,callback=None):
         sta_if.active(True)
         sta_if.connect(ssid, pw)
         while not sta_if.isconnected():
-            await asyncio.sleep(0.3)
+            await asyncio.sleep_ms(500)
             print(".", end=" ")
     
     if callback != None:
