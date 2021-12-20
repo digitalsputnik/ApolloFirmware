@@ -4,8 +4,8 @@ from Lib.pushbutton import Pushbutton
 import flags
 
 # Button Pins
-power_pin = 22
-program_pin = 23
+power_pin = 35
+program_pin = 34
 
 # Button actions
 power_short = flags.power_short_flag.set

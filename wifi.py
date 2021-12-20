@@ -46,18 +46,21 @@ async def connect_to_smallest_apollo(callback=None):
         if apollo_found:
             selected_ssid = "Apollo" + '{:0>{w}}'.format(str(smallest_apollo), w=4)
             connect(selected_ssid,"dsputnik")
+            print("Connected to " + str(selected_ssid))
         else:
             print("Apollo not found")
             await asyncio.sleep(5)
 
 async def connect(ssid,pw,callback=None):
     global sta_if
+    sta_if = network.WLAN(network.STA_IF)
     if not sta_if.isconnected():
         print('Connecting to network...')
+        sta_if.active(True)
         sta_if.connect(ssid, pw)
         while not sta_if.isconnected():
             await asyncio.sleep(0.3)
-            print(". ", end=" ")
+            print(".", end=" ")
     
     if callback != None:
         callback(sta_if.isconnected())

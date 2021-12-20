@@ -32,7 +32,7 @@ async def toggle_artnet_offset_waiter():
         pysaver.save("artnet_start_offset", artnet_start_offset)
         print("Art-Net Offset Changed - " + str(artnet_start_offset))
 
-async def __loop__():
+async def __slowloop__():
     global _socket, artnet_start_offset, callback
     try:
         data, addr = _socket.recvfrom(1024)
@@ -58,10 +58,7 @@ async def __loop__():
                 red = complete_data[0]*4
                 green = complete_data[1]*4
                 blue = complete_data[2]*4
-                white = complete_data[3]*33.33334+1500
-                
-                if white > 10000:
-                    white = 10000
+                white = complete_data[3]*4
                 
                 if callback != None:
                     callback(red,green,blue,white)
