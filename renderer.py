@@ -2,23 +2,35 @@ import uasyncio as asyncio
 import machine
 import artnet_client
 import calibration as calib
+import lm75
 
 red_pin = 21
 green_pin = 19
 blue_pin = 18
 white_pin = 4
 
-current_color = (10, 10, 10, 10)
-target_color = (10, 10, 10, 10)
+current_color = (10,10,10,10)
+target_color = current_color
+
+last_saved_color = None
 
 _pwm = []
 
 calibration = []
 red_lut = ()
 
+temp_sensor = None
+temp_comp_enabled = True
+
+pins_enabled = False
+
 async def __setup__():
-    global _pwn, red_pin, green_pin, blue_pin, white_pin, calibration
+    global _pwn, red_pin, green_pin, blue_pin, white_pin, calibration, temp_sensor
     artnet_client.callback = set_color
+    
+    # disable all outputs to avoid blinking during setup 
+    machine.Pin(27, machine.Pin.OUT, value=0)
+    
     _pwm.append(machine.PWM(machine.Pin(red_pin)))
     _pwm.append(machine.PWM(machine.Pin(green_pin)))
     _pwm.append(machine.PWM(machine.Pin(blue_pin)))
@@ -39,17 +51,81 @@ async def __setup__():
     calibration = tuple(calibration)
 
 async def __loop__():
-    global _pwm, current_color, target_color
+    global _pwm, current_color, target_color, temp_comp_enabled, pins_enabled
     vector = (target_color[0]-current_color[0], target_color[1]-current_color[1], target_color[2]-current_color[2], target_color[3]-current_color[3])
     current_color = (int(current_color[0] + vector[0]*0.1), int(current_color[1] + vector[1]*0.1), int(current_color[2] + vector[2]*0.1), int(current_color[3] + vector[3]*0.1))
-    _pwm[0].duty(current_color[0]) 
+    
+    current_temp = lm75.current_temp
+    
+    if current_temp > (1022-300):
+        current_temp = 1022-300
+    if current_temp < 0:
+        current_temp = 0
+    
+    compensatedRed = red_lut[current_temp+300]*current_color[0]>>10
+    if temp_comp_enabled:
+        _pwm[0].duty(compensatedRed) # calibrate the Red CH
+    else:
+        _pwm[0].duty(current_color[0]) 
+    
     _pwm[1].duty(current_color[1])
     _pwm[2].duty(current_color[2])
     _pwm[3].duty(current_color[3])
+    
+    if (not pins_enabled):
+        pins_enabled = True
+        machine.Pin(27, machine.Pin.OUT, value=1)
 
 def set_color(r_in=0, g_in=0, b_in=0, wb_in=0):
     global target_color
-    target_color = (r_in, g_in, b_in, wb_in)
+    
+    inputs = [r_in*4, g_in*4, b_in*4]
+    lowest = min((inputs))
+    # make lowest 8bit as 10bit had malloc issues
+    lowest = int(lowest/4)
+    
+    wb_in = wb_in*33.33334+1500
+        
+    ranges = [500,800,400,1600,800,2200,2200]
+    values = [1500,2000,2800,3200,4800,5600,7800,10000]
+        
+    temp_base = calib._1500K
+        
+    if wb_in>=2000:
+        temp_base = calib._2000K
+    if wb_in>=2800:
+        temp_base = calib._2800K
+    if wb_in>=3200:
+        temp_base = calib._3200K
+    if wb_in>=4800:
+        temp_base = calib._4800K
+    if wb_in>=5600:
+        temp_base = calib._5600K
+    if wb_in>=7800:
+        temp_base = calib._7800K
+        
+    # to avoid overflow
+    if wb_in > 10000:
+        wb_in = 10000
+        
+    overflow = wb_in-values[temp_base]
+    overflow1024 = int(overflow/ranges[temp_base]*1023)
+        
+    wbBaseA = list(calibration[temp_base][lowest])
+    wbBaseB = list(calibration[temp_base+1][lowest])
+        
+    wbBase = [0,0,0,0]
+    wbBase[0] = lerp(wbBaseA[0],wbBaseB[0],overflow1024)
+    wbBase[1] = lerp(wbBaseA[1],wbBaseB[1],overflow1024)
+    wbBase[2] = lerp(wbBaseA[2],wbBaseB[2],overflow1024)
+    wbBase[3] = lerp(wbBaseA[3],wbBaseB[3],overflow1024)
+        
+    # add colors
+    wbBase[0] += r_in-lowest
+    wbBase[1] += g_in-lowest
+    wbBase[2] += b_in-lowest
+    
+    target_color = (wbBase[0], wbBase[1], wbBase[2], wbBase[3])
     
 def generate_red_lut():
     global red_lut
