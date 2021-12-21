@@ -1,6 +1,6 @@
 import os
 
-def save(save_variable_name, save_variable, debug = False):
+def save(save_variable_name, save_variable):
     try:
         save_file = open ("Data/_" + save_variable_name + ".py", "w")
         if (isinstance(save_variable, str)):
@@ -8,27 +8,24 @@ def save(save_variable_name, save_variable, debug = False):
         else:
             save_file.write(save_variable_name + "=" + str(save_variable) +"\n")
         save_file.close()
-        if not debug:
-            return True
-        else:
-            return ("Success", True)
+        return True
     except Exception as e:
-        if not debug:
-            print (str(e))
-            return False
-        else:
-            return (str(e), False)
+        print (str(e))
+        return False
         
-def load(load_variable, debug = False):
+def load(load_variable, default, create_if_not_exist = False):
     try:
         exec("from Data._" + load_variable + " import " + load_variable + " as loaded_variable", globals())
-        if not debug:
-            return loaded_variable
-        else:
-            return (loaded_variable, True)
+        return loaded_variable
     except Exception as e:
-        if not debug:
-            print (str(e))
-            return str(e)
-        else:
-            return (str(e), False)
+        if (create_if_not_exist):
+            save(load_variable, default)
+        return default
+    
+def delete(load_variable):
+    try:
+        os.remove("Data/_" + load_variable + ".py")
+        return True
+    except Exception as e:
+        print("Error:" + str(e))
+        return False

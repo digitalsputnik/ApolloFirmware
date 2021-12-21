@@ -113,13 +113,7 @@ class calibrate():
         self._lx.append([[140,29000],[140, 7355, 14570, 21785, 29000]])
         self._lx.append([[140,29600],[140, 7505, 14870, 22235, 29600]])
         
-        import_cp = pysaver.load("colorpoints", True)
-        
-        if (import_cp[1]):
-            self._colorpoints = import_cp[0]
-            print("Previous colorpoints loaded")
-        else:
-            print("Previous colorpoints not found")
+        self._colorpoints = pysaver.load("colorpoints", self._colorpoints)
 
     '''Setup
     ...is used only to set the default brightness ranges for calibration points - should stay fairly constant throughout production
@@ -175,11 +169,7 @@ class calibrate():
             
     def export(self):
         print(self.get_calib())
-        #removing calib temp
-        try:
-            os.remove("_calibTemp.py")
-        except Exception as e:
-            print("Error:" + str(e))
+        pysaver.delete("colorpoints")
         
     def get_calib(self):
         out = ()

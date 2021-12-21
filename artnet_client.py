@@ -7,19 +7,12 @@ import apa_controller as apa
 server = '0.0.0.0'
 port = 6454
 
-artnet_start_offset = pysaver.load("artnet_start_offset", True)
-
-if (artnet_start_offset[1]):
-    artnet_start_offset = artnet_start_offset[0]
-else:
-    artnet_start_offset = 0
-    pysaver.save("artnet_start_offset", artnet_start_offset)
-    
-artnet_length = 4
-
 apa_color = (100,255,0)
 
 callback = None
+
+artnet_length = 4
+artnet_start_offset = pysaver.load("artnet_start_offset", 0, True)
 
 async def __setup__():
     global _socket

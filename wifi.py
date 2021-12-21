@@ -7,21 +7,8 @@ import apa_controller as apa
 
 connected = False
 
-is_ap = pysaver.load("is_ap", True)
-
-if (is_ap[1]):
-    is_ap = is_ap[0]
-else:
-    is_ap = True
-    pysaver.save("is_ap", is_ap)
-
-device_id = pysaver.load("device_id", True)
-
-if (device_id[1]):
-    device_id = device_id[0]
-else:
-    device_id = "ApolloXXXX"
-    pysaver.save("device_id", device_id)
+is_ap = pysaver.load("is_ap", True, True)
+device_id = pysaver.load("device_id", "ApolloXXXX", True)
     
 async def __setup__():
     update_apa()
