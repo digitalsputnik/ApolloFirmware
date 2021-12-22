@@ -3,10 +3,11 @@ from machine import Pin
 from Lib.pushbutton import Pushbutton
 import flags
 import pysaver
+import Data.pins as pins
 
 # Button Pins
-power_pin = pysaver.load("power_pin", 35, True)
-program_pin = pysaver.load("program_pin", 34, True)
+power_pin = pins.power_pin
+program_pin = pins.program_pin
 
 # Button actions
 power_short = flags.power_short_flag.set # currently waited for in renderer

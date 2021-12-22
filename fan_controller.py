@@ -2,9 +2,10 @@ import uasyncio as asyncio
 import machine
 import lm75 as temp
 import pysaver
+import Data.pins as pins
 
 fan = None
-fan_pin = pysaver.load("fan_pin", 0, True)
+fan_pin = pins.fan_pin
 fan_duty = 0
 
 min_fan_duty = 0

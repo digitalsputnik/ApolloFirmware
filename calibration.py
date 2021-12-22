@@ -62,6 +62,7 @@ import machine
 import time
 import os
 import pysaver
+import Data.pins as pins
 
 class calibrate():
     #Intensity points are linear scale 0.001%, 25%, 50%, 75% 100%
@@ -87,7 +88,7 @@ class calibrate():
     
     _pwm = []
     
-    def __init__(self, red_pin = 21, green_pin = 19, blue_pin = 18, white_pin = 4):
+    def __init__(self, red_pin = pins.red_pin, green_pin = pins.green_pin, blue_pin = pins.blue_pin, white_pin = pins.white_pin):
         self._pwm.append(machine.PWM(machine.Pin(red_pin)))
         self._pwm.append(machine.PWM(machine.Pin(green_pin)))
         self._pwm.append(machine.PWM(machine.Pin(blue_pin)))

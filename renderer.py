@@ -5,11 +5,12 @@ import calibration as calib
 import lm75
 import flags
 import pysaver
+import Data.pins as pins
 
-red_pin = pysaver.load("red_pin", 21, True)
-green_pin = pysaver.load("green_pin", 19, True)
-blue_pin = pysaver.load("blue_pin", 18, True)
-white_pin = pysaver.load("white_pin", 4, True)
+red_pin = pins.red_pin
+green_pin = pins.green_pin
+blue_pin = pins.blue_pin
+white_pin = pins.white_pin
 
 is_on = pysaver.load("is_on", True)
 
