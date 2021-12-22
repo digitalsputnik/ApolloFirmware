@@ -1,13 +1,14 @@
 from Lib.micropython_dotstar import DotStar as apa102
 import machine
+import pysaver
 
 led_count = 6
 
-sck_pin = 26
-mosi_pin = 25
-miso_pin = 0
+apa_sck_pin = pysaver.load("apa_sck_pin", 26, True)
+apa_mosi_pin = pysaver.load("apa_mosi_pin", 25, True)
+apa_miso_pin = pysaver.load("apa_miso_pin", 0, True)
 
-spi = machine.SoftSPI(sck=machine.Pin(sck_pin), mosi=machine.Pin(mosi_pin), miso=machine.Pin(miso_pin))
+spi = machine.SoftSPI(sck=machine.Pin(apa_sck_pin), mosi=machine.Pin(apa_mosi_pin), miso=machine.Pin(apa_miso_pin))
 apa = apa102(spi,led_count)
 
 locked_leds = []

@@ -18,10 +18,11 @@ async def __setup__():
     if is_ap:
         await set_ap()
     else:
-        await connect_to_smallest_apollo(wifi_callback)
-        # await connect("Apollo0000", "dsputnik", wifi_callback)
+        await connect_to_smallest_apollo()
 
 async def __slowerloop__():
+    global connected, sta_if
+    connected = sta_if.isconnected()
     update_apa()
     
 async def toggle_network_mode_waiter():
@@ -55,8 +56,8 @@ async def connect_to_smallest_apollo(callback=None):
 
         if apollo_found:
             selected_ssid = "Apollo" + '{:0>{w}}'.format(str(smallest_apollo), w=4)
-            connect(selected_ssid,"dsputnik", callback)
-            print("Connected to " + str(selected_ssid))
+            print("Apollo found - " + str(selected_ssid))
+            await connect(selected_ssid,"dsputnik", callback)
         else:
             print("Apollo not found")
             await asyncio.sleep(5)
@@ -75,10 +76,6 @@ async def connect(ssid,pw,callback=None):
     if callback != None:
         callback(sta_if.isconnected())
     print('\nNetwork config:', sta_if.ifconfig())
-
-def wifi_callback(status):
-    global connected
-    connected = status
     
 def scan_ssids():
     global sta_if

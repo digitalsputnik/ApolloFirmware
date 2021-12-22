@@ -1,13 +1,14 @@
 import uasyncio as asyncio
 import machine
 from math import floor
+import pysaver
 
 i2c = None
 
-i2c_clock_pin = 22
-i2c_data_pin = 23
+i2c_clock_pin = pysaver.load("i2c_clock_pin", 22, True)
+i2c_data_pin = pysaver.load("i2c_data_pin", 23, True)
 
-address = 79
+i2c_address = pysaver.load("i2c_address", 79, True)
 error = "None"
 last_results = (0,0)
 current_temp = 0
@@ -26,9 +27,9 @@ async def __slowerloop__():
         temp_values = []
 
 def get_output():
-    global i2c, address
+    global i2c, i2c_address
     """Return raw output from the LM75 sensor."""
-    output = i2c.readfrom(address, 2)
+    output = i2c.readfrom(i2c_address, 2)
     return output[0], output[1]
 
 def get_temp():

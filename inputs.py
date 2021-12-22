@@ -2,14 +2,15 @@ import uasyncio as asyncio
 from machine import Pin
 from Lib.pushbutton import Pushbutton
 import flags
+import pysaver
 
 # Button Pins
-power_pin = 35
-program_pin = 34
+power_pin = pysaver.load("power_pin", 35, True)
+program_pin = pysaver.load("program_pin", 34, True)
 
 # Button actions
-power_short = flags.power_short_flag.set
-power_long = flags.power_long_flag.set
+power_short = flags.power_short_flag.set # currently waited for in renderer
+power_long = flags.power_long_flag.set # currently waited for in renderer
 program_short = flags.program_short_flag.set # currently waited for in artnet_client
 program_long = flags.program_long_flag.set # currently waited for in wifi
 
