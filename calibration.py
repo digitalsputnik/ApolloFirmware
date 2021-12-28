@@ -43,7 +43,7 @@ WB(Kelvin) range, dUV range and the new R,G,B,W values.
 compare these values to values shown by Sekonic
 and change offsets using c.update()[shown above]
 until lamp values are in between preferred ranges. 
-2. Export output and copy to the calib.py line 1 lamp_calibration variable
+2. Export output and copy to the calibration.py line 1 lamp_calibration variable
 c.export()
     
 3. Once you've saved the edit in Thonny
