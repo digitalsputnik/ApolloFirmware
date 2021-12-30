@@ -1,8 +1,10 @@
 import uasyncio as asyncio
 import socket
+from struct import pack, unpack
 import pysaver
 import flags
 import apa_controller as apa
+import time
 
 server = '0.0.0.0'
 port = 6454
@@ -30,35 +32,12 @@ async def __slowloop__():
     update_apa()
     try:
         data, addr = _socket.recvfrom(1024)
-        if len(data) > 20:
-            AN_header = data[0:7]
-            AN_opcode = data[8:10]
-            AN_universe = data[14:16]
-            AN_length = data[17]
-            
-            check_state = 0
-            if AN_header == b"Art-Net":
-                check_state = 1
-            if AN_opcode == b'\x00P' and check_state == 1:
-                check_state = 2
-            if AN_universe == b'\x00\x00' and check_state == 2:
-                check_state = 99
-             
-            if check_state == 99:
-                dataStart = 18 + artnet_start_offset
-                dataEnd = 18 + artnet_start_offset + artnet_length
-                complete_data = data[dataStart:dataEnd]
-                
-                red = complete_data[0]
-                green = complete_data[1]
-                blue = complete_data[2]
-                white = complete_data[3]
-                
-                if callback != None:
-                    callback(red,green,blue,white)
-                else:
-                    print(str(red) + ", " + str(green) + ", " + str(blue) + ", " + str(white))
-              
+        
+        if is_artnet_packet(data):
+            packet = ArtNetPacket(data)
+            print("Data - " + str(packet.data))
+        else:
+            print("Received a non Art-Net packet")
     except Exception as e:
         await asyncio.sleep(0)
         
@@ -83,3 +62,21 @@ def update_apa():
     new_apa = int(artnet_start_offset/5)
     apa.set_led(new_apa, apa_color)
     apa.lock_led(new_apa)
+    
+def is_artnet_packet(data):
+    if data[:8] != b'Art-Net\x00':
+        return False
+    else:
+        return True
+
+class ArtNetPacket:
+    def __init__(self, data = None):
+        if (data != None):
+            self.op_code = hex(unpack('<H', data[8:10])[0])
+            self.ver = unpack('!H', data[10:12])[0]
+            self.sequence = data[12]
+            self.physical = data[13]
+            self.universe = unpack('<H', data[14:16])[0]
+            self.length = unpack('!H', data[16:18])[0]
+            
+            self.data = (data[18], data[19], data[20], data[21])
