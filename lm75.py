@@ -18,7 +18,7 @@ temp_values = []
 async def __setup__():
     global i2c
     i2c = machine.SoftI2C(scl=machine.Pin(i2c_clock_pin), sda=machine.Pin(i2c_data_pin))
-    asyncio.create_task(print_temp())
+    # asyncio.create_task(print_temp())
 
 async def print_temp():
     while True:
