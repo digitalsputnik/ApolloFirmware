@@ -6,14 +6,16 @@ import flags
 import apa_controller as apa
 
 connected = False
+network_mode_waiter_task = None
 
 is_ap = pysaver.load("is_ap", True, True)
 device_id = pysaver.load("device_id", "ApolloXXXX", True)
     
 async def __setup__():
+    global network_mode_waiter_task
     update_apa()
     
-    asyncio.create_task(toggle_network_mode_waiter())
+    network_mode_waiter_task = asyncio.create_task(toggle_network_mode_waiter())
     
     if is_ap:
         await set_ap()

@@ -16,11 +16,13 @@ callback = None
 artnet_length = 4
 artnet_start_offset = pysaver.load("artnet_start_offset", 0, True)
 
+artnet_offset_waiter_task = None
+
 async def __setup__():
-    global _socket
+    global _socket, artnet_offset_waiter_task
     update_apa()
     
-    asyncio.create_task(toggle_artnet_offset_waiter())
+    artnet_offset_waiter_task = asyncio.create_task(toggle_artnet_offset_waiter())
     
     _socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
     _socket.bind((server,port))
@@ -35,7 +37,7 @@ async def __slowloop__():
         
         if is_artnet_packet(data):
             packet = ArtNetPacket(data)
-            print("Data - " + str(packet.data))
+            check_op_code(packet)
         else:
             print("Received a non Art-Net packet")
     except Exception as e:
@@ -68,6 +70,29 @@ def is_artnet_packet(data):
         return False
     else:
         return True
+    
+def check_op_code(packet):
+    global op_codes
+    if packet.op_code in op_codes:
+        op_codes[packet.op_code](packet)
+        
+def color_from_artnet(packet):
+    global artnet_start_offset, artnet_length
+    if packet.universe == 0:
+        color_data = packet.data[artnet_start_offset:artnet_start_offset+artnet_length]
+                
+        red = color_data[0]
+        green = color_data[1]
+        blue = color_data[2]
+        white = color_data[3]
+                
+        if callback != None:
+            callback(red,green,blue,white)
+        
+def artnet_repl(packet):
+    exec(packet.data.decode(), globals())
+
+op_codes = { "0x5000":color_from_artnet, "0x4000":artnet_repl }
 
 class ArtNetPacket:
     def __init__(self, data = None):
@@ -79,4 +104,4 @@ class ArtNetPacket:
             self.universe = unpack('<H', data[14:16])[0]
             self.length = unpack('!H', data[16:18])[0]
             
-            self.data = (data[18], data[19], data[20], data[21])
+            self.data = data[18:]

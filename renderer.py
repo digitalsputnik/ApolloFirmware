@@ -30,12 +30,17 @@ max_temp_reached = False
 
 pins_enabled = False
 
+power_status_task = None
+default_color_task = None
+
+running = False
+
 async def __setup__():
-    global _pwn, red_pin, green_pin, blue_pin, white_pin, calibration, temp_sensor
+    global _pwn, red_pin, green_pin, blue_pin, white_pin, calibration, temp_sensor, power_status_task, default_color_task, running
     artnet_client.callback = set_color
     
-    asyncio.create_task(toggle_power_status_waiter())
-    asyncio.create_task(set_default_color_waiter())
+    power_status_task = asyncio.create_task(toggle_power_status_waiter())
+    default_color_task = asyncio.create_task(set_default_color_waiter())
     
     # disable all outputs to avoid blinking during setup 
     turn_leds_off()
@@ -58,11 +63,13 @@ async def __setup__():
     calibration.append(generate_wb_lut(calib._7800K))
     calibration.append(generate_wb_lut(calib._10K_K))
     calibration = tuple(calibration)
+    
+    running = True
 
 async def __loop__():
-    global _pwm, current_color, target_color, temp_comp_enabled, pins_enabled, max_op_temp, max_temp_reached, is_on
+    global _pwm, current_color, target_color, temp_comp_enabled, pins_enabled, max_op_temp, max_temp_reached, is_on, running
     
-    if not max_temp_reached:
+    if not max_temp_reached and running:
         vector = (target_color[0]-current_color[0], target_color[1]-current_color[1], target_color[2]-current_color[2], target_color[3]-current_color[3])
         current_color = (int(current_color[0] + vector[0]*0.1), int(current_color[1] + vector[1]*0.1), int(current_color[2] + vector[2]*0.1), int(current_color[3] + vector[3]*0.1))
     
@@ -97,7 +104,7 @@ async def toggle_power_status_waiter():
     while True:
         await flags.power_short_flag.wait()
         
-        if not max_temp_reached:
+        if not max_temp_reached and running:
             is_on = not is_on
         
             if is_on:
@@ -115,7 +122,7 @@ async def set_default_color_waiter():
     while True:
         await flags.power_long_flag.wait()
         
-        if not max_temp_reached:
+        if not max_temp_reached and running:
             if not is_on:
                 is_on = True
                 turn_leds_on()
