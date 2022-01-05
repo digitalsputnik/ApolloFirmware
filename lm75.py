@@ -18,6 +18,7 @@ temp_values = []
 async def __setup__():
     global i2c
     i2c = machine.SoftI2C(scl=machine.Pin(i2c_clock_pin), sda=machine.Pin(i2c_data_pin))
+    asyncio.create_task(temp_loop())
     # asyncio.create_task(print_temp())
 
 async def print_temp():
@@ -25,13 +26,17 @@ async def print_temp():
         await asyncio.sleep(2)
         print(str(current_temp))
 
-async def __slowerloop__():
+async def temp_loop():
     global temp_values, current_temp
-    if len(temp_values) < 7:
-        temp_values.append(get_temp())
-    else:
-        current_temp = temp_values[3]
-        temp_values = []
+    while True:
+        await asyncio.sleep(1)
+        if len(temp_values) < 7:
+            temp_values.append(get_temp())
+        else:
+            temp_values.pop(0)
+            temp_values.append(get_temp())
+            temp_values.sort(reverse = True)
+            current_temp = temp_values[3]
 
 def get_output():
     global i2c, i2c_address
