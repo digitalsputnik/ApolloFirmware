@@ -35,8 +35,10 @@ async def temp_loop():
         else:
             temp_values.pop(0)
             temp_values.append(get_temp())
-            temp_values.sort(reverse = True)
-            current_temp = temp_values[3]
+            temp_list = temp_values.copy()
+            temp_list.sort(reverse = True)
+            current_temp = temp_list[3]
+        
 
 def get_output():
     global i2c, i2c_address
