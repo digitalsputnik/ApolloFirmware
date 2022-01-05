@@ -38,6 +38,7 @@ async def temp_loop():
             temp_list = temp_values.copy()
             temp_list.sort(reverse = True)
             current_temp = temp_list[3]
+            print(temp_list)
         
 
 def get_output():
