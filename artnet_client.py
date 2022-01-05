@@ -5,6 +5,8 @@ import pysaver
 import flags
 import apa_controller as apa
 import time
+import io
+import os
 
 server = '0.0.0.0'
 port = 6454
@@ -20,6 +22,7 @@ artnet_offset_waiter_task = None
 
 async def __setup__():
     global _socket, artnet_offset_waiter_task
+    
     update_apa()
     
     artnet_offset_waiter_task = asyncio.create_task(toggle_artnet_offset_waiter())
@@ -33,11 +36,11 @@ async def __slowloop__():
     global _socket, artnet_start_offset, callback
     update_apa()
     try:
-        data, addr = _socket.recvfrom(1024)
+        data, address = _socket.recvfrom(1024)
         
         if is_artnet_packet(data):
             packet = ArtNetPacket(data)
-            check_op_code(packet)
+            check_op_code(address, packet)
         else:
             print("Received a non Art-Net packet")
     except Exception as e:
@@ -71,12 +74,12 @@ def is_artnet_packet(data):
     else:
         return True
     
-def check_op_code(packet):
+def check_op_code(address, packet):
     global op_codes
     if packet.op_code in op_codes:
-        op_codes[packet.op_code](packet)
+        op_codes[packet.op_code](address, packet)
         
-def color_from_artnet(packet):
+def color_from_artnet(address, packet):
     global artnet_start_offset, artnet_length
     if packet.universe == 0:
         color_data = packet.data[artnet_start_offset:artnet_start_offset+artnet_length]
@@ -89,10 +92,28 @@ def color_from_artnet(packet):
         if callback != None:
             callback(red,green,blue,white)
         
-def artnet_repl(packet):
+def artnet_repl(address, packet):
+    global _socket
+    s = bytearray()
+    os.dupterm(console_out(s))
     exec(packet.data.decode(), globals())
+    msg = bytes(s).decode()
+    _socket.sendto(msg.encode(), address)
+    os.dupterm(None)
 
 op_codes = { "0x5000":color_from_artnet, "0x4000":artnet_repl }
+
+class console_out(io.IOBase):
+
+    def __init__(self, s):
+        self.s = s
+
+    def write(self, data):
+        self.s += data
+        return len(data)
+
+    def readinto(self, data):
+        return 0
 
 class ArtNetPacket:
     def __init__(self, data = None):
