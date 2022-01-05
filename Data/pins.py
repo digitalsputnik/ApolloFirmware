@@ -1,7 +1,7 @@
 fan_pin=0
 
-power_pin=35
-program_pin=34
+power_pin=34
+program_pin=35
 
 red_pin=21
 green_pin=19
@@ -14,4 +14,4 @@ apa_sck_pin=26
 
 i2c_data_pin=23
 i2c_clock_pin=22
-i2c_address=79
+i2c_address=78
