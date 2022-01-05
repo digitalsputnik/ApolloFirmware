@@ -186,6 +186,7 @@ def set_color(r_in=0, g_in=0, b_in=0, wb_in=0):
         wbBase[2] += b_in-lowest
     
         target_color = (wbBase[0], wbBase[1], wbBase[2], wbBase[3])
+        print("Calibrated R,G,B,W Values: " + str(wbBase))
     
 def generate_red_lut():
     global red_lut

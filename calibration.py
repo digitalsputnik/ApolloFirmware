@@ -63,6 +63,7 @@ import time
 import os
 import pysaver
 import Data.pins as pins
+import renderer
 
 class calibrate():
     #Intensity points are linear scale 0.001%, 25%, 50%, 75% 100%
@@ -163,10 +164,7 @@ class calibrate():
         
         pysaver.save("colorpoints", self._colorpoints)
         
-        self._pwm[0].duty(out[0])
-        self._pwm[1].duty(out[1])
-        self._pwm[2].duty(out[2])
-        self._pwm[3].duty(out[3])
+        renderer.set_color(out[0], out[1], out[2], out[3])
             
     def export(self):
         print(self.get_calib())
