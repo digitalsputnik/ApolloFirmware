@@ -15,10 +15,12 @@ target_temp = 500
 step = 128
 reaction_delay_s = 5
 
+fan_point_chaser_task = None
+
 async def __setup__():
-    global fan, fan_pin, fan_duty
+    global fan, fan_pin, fan_duty, fan_point_chaser_task
     fan = machine.PWM(machine.Pin(fan_pin),duty=fan_duty)
-    asyncio.create_task(temp_point_chaser_loop())
+    fan_point_chaser_task = asyncio.create_task(temp_point_chaser_loop())
 
 async def temp_point_chaser_loop():
     global fan, fan_duty, target_temp, min_fan_duty, max_fan_duty, step, reaction_delay_s
