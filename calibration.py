@@ -164,7 +164,7 @@ class calibrate():
         
         pysaver.save("colorpoints", self._colorpoints)
         
-        renderer.set_color(out[0], out[1], out[2], out[3])
+        renderer.target_color = (out[0], out[1], out[2], out[3])
             
     def export(self):
         print(self.get_calib())
