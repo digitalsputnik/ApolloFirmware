@@ -7,6 +7,7 @@ import apa_controller as apa
 import time
 import io
 import os
+import tags
 
 server = '0.0.0.0'
 port = 6454
