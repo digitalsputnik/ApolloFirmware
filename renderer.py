@@ -71,8 +71,24 @@ async def __loop__():
     
     if not max_temp_reached and running:
         vector = (target_color[0]-current_color[0], target_color[1]-current_color[1], target_color[2]-current_color[2], target_color[3]-current_color[3])
-        current_color = (int(current_color[0] + vector[0]*0.1), int(current_color[1] + vector[1]*0.1), int(current_color[2] + vector[2]*0.1), int(current_color[3] + vector[3]*0.1))
-    
+        current_color = [int(current_color[0] + vector[0]*0.1), int(current_color[1] + vector[1]*0.1), int(current_color[2] + vector[2]*0.1), int(current_color[3] + vector[3]*0.1)]
+        
+        diff = (target_color[0]-current_color[0], target_color[1]-current_color[1], target_color[2]-current_color[2], target_color[3]-current_color[3])
+        
+        if (abs(diff[0]) < 10):
+            current_color[0] = int(target_color[0])
+            
+        if (abs(diff[1]) < 10):
+            current_color[1] = int(target_color[1])
+            
+        if (abs(diff[2]) < 10):
+            current_color[2] = int(target_color[2])
+            
+        if (abs(diff[3]) < 10):
+            current_color[3] = int(target_color[3])
+            
+        current_color = tuple(current_color)
+
         current_temp = lm75.current_temp
     
         if current_temp > (1022-300):
