@@ -9,12 +9,18 @@ def add_tag(tag):
     if tag not in tags:
         tags.append(tag)
         pysaver.save("tags", tags)
+        print("Tag " + str(tag) + " added")
+    else:
+        print("Tag already exists")
 
 def remove_tag(tag):
     global tags
     if tag in tags:
         tags.remove(tag)
         pysaver.save("tags", tags)
+        print("Tag " + str(tag) + " removed")
+    else:
+        print("Tag not found")
 
 def has_tag(tag):
     global tags

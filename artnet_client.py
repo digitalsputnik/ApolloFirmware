@@ -84,7 +84,6 @@ def color_from_artnet(address, packet):
     global artnet_start_offset, artnet_length
     if packet.universe == 0:
         color_data = packet.data[artnet_start_offset:artnet_start_offset+artnet_length]
-                
         red = color_data[0]
         green = color_data[1]
         blue = color_data[2]
@@ -95,14 +94,30 @@ def color_from_artnet(address, packet):
         
 def artnet_repl(address, packet):
     global _socket
-    s = bytearray()
-    os.dupterm(console_out(s))
-    exec(packet.data.decode(), globals())
-    msg = bytes(s).decode()
-    _socket.sendto(msg.encode(), address)
-    os.dupterm(None)
+    correct_tag = False
+    packet_tuple = parse_tuple(packet.data.decode())
+            
+    for tag in packet_tuple[0]:
+        if (tags.has_tag(tag)):
+            packet.data = packet_tuple[1]
+            correct_tag = True
+            
+    if correct_tag:
+        s = bytearray()
+        os.dupterm(console_out(s))
+        exec(packet.data, globals())
+        _socket.sendto(bytes(s), address)
+        os.dupterm(None)
 
 op_codes = { "0x5000":color_from_artnet, "0x4000":artnet_repl }
+
+def parse_tuple(string):
+    try:
+        s = eval(string)
+        if type(s) == tuple:
+            return s
+    except:
+        pass
 
 class console_out(io.IOBase):
 

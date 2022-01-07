@@ -59,12 +59,20 @@ async def connect_to_smallest_apollo(callback=None):
         if apollo_found:
             selected_ssid = "Apollo" + '{:0>{w}}'.format(str(smallest_apollo), w=4)
             print("Apollo found - " + str(selected_ssid))
-            await connect(selected_ssid,"dsputnik", callback)
+            await start_connecting(selected_ssid,"dsputnik", callback)
         else:
             print("Apollo not found")
             await asyncio.sleep(5)
+            
+def connect(ssid, pw):
+    global sta_if, is_ap, connected
+    if is_ap:
+        is_ap = not is_ap
+        sta_if.active(False)
+        pysaver.save("is_ap", is_ap)
+    asyncio.create_task(start_connecting(ssid, pw))
 
-async def connect(ssid,pw,callback=None):
+async def start_connecting(ssid,pw,callback=None):
     global sta_if
     sta_if = network.WLAN(network.STA_IF)
     if not sta_if.isconnected():
