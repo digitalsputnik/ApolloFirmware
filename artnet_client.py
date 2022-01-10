@@ -96,11 +96,15 @@ def artnet_repl(address, packet):
     global _socket
     correct_tag = False
     packet_tuple = parse_tuple(packet.data.decode())
-            
-    for tag in packet_tuple[0]:
-        if (tags.has_tag(tag)):
-            packet.data = packet_tuple[1]
-            correct_tag = True
+    
+    if (len(packet_tuple[0]) == 0):
+        packet.data = packet_tuple[1]
+        correct_tag = True
+    else:
+        for tag in packet_tuple[0]:
+            if (tags.has_tag(tag)):
+                packet.data = packet_tuple[1]
+                correct_tag = True
             
     if correct_tag:
         s = bytearray()
