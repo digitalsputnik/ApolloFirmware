@@ -8,19 +8,32 @@ import apa_controller as apa
 connected = False
 network_mode_waiter_task = None
 
-is_ap = pysaver.load("is_ap", True, True)
+AP = 0
+APOLLO_CLIENT = 1
+CLIENT = 2
+
+network_mode = pysaver.load("network_mode", AP, True)
+
+wifi_ssid = pysaver.load("wifi_ssid", None)
+wifi_pw = pysaver.load("wifi_pw", None)
+
 device_id = pysaver.load("device_id", "ApolloXXXX", True)
     
 async def __setup__():
-    global network_mode_waiter_task
+    global network_mode_waiter_task, network_mode, AP, CLIENT, APOLLO_CLIENT, wifi_ssid, wifi_pw
     update_apa()
     
     network_mode_waiter_task = asyncio.create_task(toggle_network_mode_waiter())
     
-    if is_ap:
+    if network_mode is AP:
         await set_ap()
-    else:
+    elif network_mode is APOLLO_CLIENT:
         await connect_to_smallest_apollo()
+    elif network_mode is CLIENT and wifi_ssid is not None:
+        await start_connecting(wifi_ssid, wifi_pw)
+    else:
+        print("Ssid not set, setting AP")
+        await set_ap()
 
 async def __slowerloop__():
     global connected, sta_if
@@ -28,14 +41,21 @@ async def __slowerloop__():
     update_apa()
     
 async def toggle_network_mode_waiter():
-    global is_ap
+    global network_mode, AP, CLIENT, APOLLO_CLIENT, wifi_ssid, wifi_pw
     while True:
         await flags.program_long_flag.wait()
-        is_ap = not is_ap
+        if wifi_ssid is None:
+            network_mode = network_mode + 1
+            if network_mode > 1:
+                network_mode = 0
+        else:
+            network_mode = network_mode + 1
+            if network_mode > 2:
+                network_mode = 0
         update_apa()
-        pysaver.save("is_ap", is_ap)
+        pysaver.save("network_mode", network_mode)
         machine.reset()
-        print("Network Mode Changed. Is ap - " + str(is_ap))
+        print("Network Mode Changed. Network Mode - " + str(network_mode))
 
 async def set_ap():
     global sta_if, device_id
@@ -65,12 +85,19 @@ async def connect_to_smallest_apollo(callback=None):
             await asyncio.sleep(5)
             
 def connect(ssid, pw):
-    global sta_if, is_ap, connected
-    if is_ap:
-        is_ap = not is_ap
-        sta_if.active(False)
-        pysaver.save("is_ap", is_ap)
-    asyncio.create_task(start_connecting(ssid, pw))
+    global sta_if, connected, network_mode, AP, CLIENT, APOLLO_CLIENT, wifi_ssid, wifi_pw
+    network_mode = CLIENT
+    wifi_ssid = ssid
+    wifi_pw = pw
+    update_apa()
+    pysaver.save("network_mode", network_mode)
+    pysaver.save("wifi_ssid", wifi_ssid)
+    pysaver.save("wifi_pw", wifi_pw)
+    machine.reset()
+
+def delete_saved_ssid():
+    pysaver.delete("wifi_ssid")
+    pysaver.delete("wifi_pw")
 
 async def start_connecting(ssid,pw,callback=None):
     global sta_if
@@ -95,8 +122,8 @@ def scan_ssids():
     return ssids
 
 def update_apa():
-    global is_ap, connected
-    if is_ap:
+    global connected, network_mode, AP
+    if network_mode is AP:
         for i in range(6):
             apa.set_led(i,(0,0,int(i*30)))
     else:

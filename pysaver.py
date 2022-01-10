@@ -22,9 +22,9 @@ def load(load_variable, default, create_if_not_exist = False):
             save(load_variable, default)
         return default
     
-def delete(load_variable):
+def delete(delete_variable):
     try:
-        os.remove("Data/_" + load_variable + ".py")
+        os.remove("Data/_" + delete_variable + ".py")
         return True
     except Exception as e:
         print("Error:" + str(e))
