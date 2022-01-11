@@ -4,20 +4,26 @@ Micropython software for the Apollo lamps
 
 # instalation
 
-1. Download micropython: https://micropython.org/download/esp32/ (1.17 with spi RAM)
-1. Install Python3, pip3
-1. Install ampy (```pip3 install adafruit-ampy```)
-1. Install esptool (```pip3 install esptool```)
-1. Install micropython to the board
-  * ```esptool.py --port **COM port** erase_flash```
-  * ```esptool.py --chip esp32 --port **COM port** write_flash -z 0x1000 **filename.bin**```
-6. Upload all files, one by one ```ampy -p **COM port** put **main.py**```
+1. Download micropython: https://micropython.org/download/esp32spiram/ (1.17)
+1. Install Thonny: https://thonny.org/
+2. Connect Apollo via USB Serial converter to the computer (need mac instructions for the yellow USBC board)
+3. Install micropython to the ESP
+   -> Run -> Select Interpeter -> MicroPython(ESP32)
+   -> Lower left side there is an option to "install or update firmware", just above the OK button
+   -> select "From image file(keep)"
+   -> select "Erase flash before installing
+6. Once the system is booted connect from thonny again, delete all files on flash
+7. Uplad all files from the .py files and folders
+8. Update the "Data/_device_id.py"
+9. Update the "Data/pins.py
 
 
 # terminal usage
-Both serial and BLE terminal are supported
-1. Connect (```screen **COM port** 115200```)
-2. Set color 8bit values (0-255) (```Output.setColor(255,255,255)```)
-3. Set uncalibrated color 10bit values (0-1023)  (```Output.pushRGBW((1023,1023,1023,1023))```)
-4. Get temperature of the led board (```Output._currentTemp```)
-5. To diable the red compensation (```Output.__tempCompEnable = False```)
+Currently our own communication protocol is used in async mode
+### Use Python to connect to the lamp
+1. Download the DSDMpy (https://github.com/digitalsputnik/DSDM)
+2. Connect to the same network as the lamp
+### Use Blender to connect to the lamp
+1. Download the python scene file ()
+2. Connect to the same network as the lamp
+3. Select the function You would like to preform from top center dropdown of py files. Dont use directly the files that sart with _
