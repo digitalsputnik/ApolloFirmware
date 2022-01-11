@@ -8,6 +8,7 @@ import time
 import io
 import os
 import tags
+import wifi
 
 server = '0.0.0.0'
 port = 6454
@@ -96,21 +97,24 @@ def artnet_repl(address, packet):
     global _socket
     correct_tag = False
     packet_tuple = parse_tuple(packet.data.decode())
+    identifier = packet_tuple[0]
+    sent_tags = packet_tuple[1]
+    command = packet_tuple[2]
     
-    if (len(packet_tuple[0]) == 0):
-        packet.data = packet_tuple[1]
+    if (len(sent_tags) == 0):
         correct_tag = True
     else:
-        for tag in packet_tuple[0]:
+        for tag in sent_tags:
             if (tags.has_tag(tag)):
-                packet.data = packet_tuple[1]
                 correct_tag = True
-            
+    
     if correct_tag:
         s = bytearray()
         os.dupterm(console_out(s))
-        exec(packet.data, globals())
-        _socket.sendto(bytes(s), address)
+        exec(command, globals())
+        result = bytes(s)
+        if (len(result) > 0):
+            _socket.sendto(str((wifi.device_id, identifier, result)).encode(), address)
         os.dupterm(None)
 
 op_codes = { "0x5000":color_from_artnet, "0x4000":artnet_repl }
