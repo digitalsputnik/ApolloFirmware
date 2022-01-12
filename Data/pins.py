@@ -12,6 +12,8 @@ apa_miso_pin=0
 apa_mosi_pin=25
 apa_sck_pin=26
 
+neopixel_pin = 0
+
 i2c_data_pin=23
 i2c_clock_pin=22
 i2c_address=78

@@ -3,7 +3,7 @@ import socket
 from struct import pack, unpack
 import pysaver
 import flags
-import apa_controller as apa
+import led_controller as led
 import time
 import io
 import os
@@ -13,7 +13,7 @@ import wifi
 server = '0.0.0.0'
 port = 6454
 
-apa_color = (100,255,0)
+led_color = (100,255,0)
 
 callback = None
 
@@ -25,7 +25,7 @@ artnet_offset_waiter_task = None
 async def __setup__():
     global _socket, artnet_offset_waiter_task
     
-    update_apa()
+    update_led()
     
     artnet_offset_waiter_task = asyncio.create_task(toggle_artnet_offset_waiter())
     
@@ -36,7 +36,7 @@ async def __setup__():
     
 async def __slowloop__():
     global _socket, artnet_start_offset, callback
-    update_apa()
+    update_led()
     try:
         data, address = _socket.recvfrom(1024)
         
@@ -49,7 +49,7 @@ async def __slowloop__():
         await asyncio.sleep(0)
         
 async def __slowerloop__():
-    update_apa()
+    update_led()
     
 async def toggle_artnet_offset_waiter():
     global artnet_start_offset
@@ -63,12 +63,12 @@ async def toggle_artnet_offset_waiter():
         pysaver.save("artnet_start_offset", artnet_start_offset)
         print("Art-Net Offset Changed - " + str(artnet_start_offset))
 
-def update_apa():
-    global artnet_start_offset, apa_color
-    apa.unlock_all_leds()
-    new_apa = int(artnet_start_offset/5)
-    apa.set_led(new_apa, apa_color)
-    apa.lock_led(new_apa)
+def update_led():
+    global artnet_start_offset, led_color
+    led.unlock_all_leds()
+    new_led = int(artnet_start_offset/5)
+    led.set_led(new_led, led_color)
+    led.lock_led(new_led)
     
 def is_artnet_packet(data):
     if data[:8] != b'Art-Net\x00':

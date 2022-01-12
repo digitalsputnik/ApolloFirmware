@@ -3,7 +3,7 @@ import machine
 import network
 import pysaver
 import flags
-import apa_controller as apa
+import led_controller as led
 
 connected = False
 network_mode_waiter_task = None
@@ -21,7 +21,7 @@ device_id = pysaver.load("device_id", "ApolloXXXX", True)
     
 async def __setup__():
     global network_mode_waiter_task, network_mode, AP, CLIENT, APOLLO_CLIENT, wifi_ssid, wifi_pw
-    update_apa()
+    update_led()
     
     network_mode_waiter_task = asyncio.create_task(toggle_network_mode_waiter())
     
@@ -38,7 +38,7 @@ async def __setup__():
 async def __slowerloop__():
     global connected, sta_if
     connected = sta_if.isconnected()
-    update_apa()
+    update_led()
     
 async def toggle_network_mode_waiter():
     global network_mode, AP, CLIENT, APOLLO_CLIENT, wifi_ssid, wifi_pw
@@ -52,7 +52,7 @@ async def toggle_network_mode_waiter():
             network_mode = network_mode + 1
             if network_mode > 2:
                 network_mode = 0
-        update_apa()
+        update_led()
         pysaver.save("network_mode", network_mode)
         machine.reset()
         print("Network Mode Changed. Network Mode - " + str(network_mode))
@@ -89,7 +89,7 @@ def connect(ssid, pw):
     network_mode = CLIENT
     wifi_ssid = ssid
     wifi_pw = pw
-    update_apa()
+    update_led()
     pysaver.save("network_mode", network_mode)
     pysaver.save("wifi_ssid", wifi_ssid)
     pysaver.save("wifi_pw", wifi_pw)
@@ -121,15 +121,15 @@ def scan_ssids():
     ssids = sta_if.scan()
     return ssids
 
-def update_apa():
+def update_led():
     global connected, network_mode, AP
     if network_mode is AP:
         for i in range(6):
-            apa.set_led(i,(0,0,int(i*30)))
+            led.set_led(i,(0,0,int(i*30)))
     else:
         if connected:
             for i in range(6):
-                apa.set_led(i,(int(i*30),0,0))
+                led.set_led(i,(int(i*30),0,0))
         else:
             for i in range(6):
-                apa.set_led(i,(0,int(i*30),0))
+                led.set_led(i,(0,int(i*30),0))
