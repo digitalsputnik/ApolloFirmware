@@ -17,7 +17,7 @@ apa_color = (100,255,0)
 
 callback = None
 
-artnet_length = 4
+artnet_length = 5
 artnet_start_offset = pysaver.load("artnet_start_offset", 0, True)
 
 artnet_offset_waiter_task = None
@@ -89,9 +89,10 @@ def color_from_artnet(address, packet):
         green = color_data[1]
         blue = color_data[2]
         white = color_data[3]
+        fx = color_data[4]
                 
         if callback != None:
-            callback(red,green,blue,white)
+            callback(red,green,blue,white,fx)
         
 def artnet_repl(address, packet):
     global _socket

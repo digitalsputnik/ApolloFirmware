@@ -17,6 +17,8 @@ is_on = pysaver.load("is_on", True)
 current_color = pysaver.load("current_color", (10, 10, 10, 10))
 target_color = current_color
 
+fx_buffer = [(255,255,255)]
+
 _pwm = []
 
 calibration = []
@@ -151,10 +153,27 @@ def turn_leds_off():
 def turn_leds_on():
     machine.Pin(27, machine.Pin.OUT, value=1)
 
-def set_color(r_in=0, g_in=0, b_in=0, wb_in=0):
+def set_color(r_in=0, g_in=0, b_in=0, wb_in=0, fx_in=0):
     global target_color, max_temp_reached, is_on
     
     if not max_temp_reached and is_on:
+        
+        print("before - " + str((r_in, g_in, b_in)))
+        
+        r_in = r_in * ((255 - fx_in) / 255)
+        g_in = g_in * ((255 - fx_in) / 255)
+        b_in = b_in * ((255 - fx_in) / 255)
+        
+        r_in += fx_buffer[0][0] * (fx_in / 255)
+        g_in += fx_buffer[0][1] * (fx_in / 255)
+        b_in += fx_buffer[0][2] * (fx_in / 255)
+        
+        r_in = int(r_in)
+        g_in = int(g_in)
+        b_in = int(b_in)
+        
+        print("after - " + str((r_in, g_in, b_in)))
+        
         inputs = [r_in*4, g_in*4, b_in*4]
         lowest = min((inputs))
         # make lowest 8bit as 10bit had malloc issues
@@ -200,7 +219,7 @@ def set_color(r_in=0, g_in=0, b_in=0, wb_in=0):
         wbBase[0] += r_in-lowest
         wbBase[1] += g_in-lowest
         wbBase[2] += b_in-lowest
-    
+        
         target_color = (wbBase[0], wbBase[1], wbBase[2], wbBase[3])
     
 def generate_red_lut():
