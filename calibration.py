@@ -43,7 +43,7 @@ WB(Kelvin) range, dUV range and the new R,G,B,W values.
 compare these values to values shown by Sekonic
 and change offsets using c.update()[shown above]
 until lamp values are in between preferred ranges. 
-2. Export output and copy to the calibration.py line 1 lamp_calibration variable
+2. Export output and copy to the Data.saved_calibration.py line 1 lamp_calibration variable
 c.export()
     
 3. Once you've saved the edit in Thonny
@@ -120,8 +120,8 @@ class calibrate():
     '''Setup
     ...is used only to set the default brightness ranges for calibration points - should stay fairly constant throughout production
     if You need to change the _lx variable create new ranges by 1st calibrating the 0 and 100 ranges for all WB
-        c = calib.calib()
-        c.update(c._5600K,c._intensity_100,offset=(0,0,0,0),output=Output) # keep adjusting the offset until the calibration fits the ranges
+        c = calibration.calibrate()
+        c.update(c._5600K,c._intensity_100,offset=(0,0,0,0)) # keep adjusting the offset until the calibration fits the ranges
         
     '''
 
