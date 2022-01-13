@@ -110,13 +110,34 @@ def artnet_repl(address, packet):
                 correct_tag = True
     
     if correct_tag:
+        safe = filter_incoming_command(command)
+        
         s = bytearray()
         os.dupterm(console_out(s))
-        exec(command, globals())
+        
+        if safe:
+            exec(command, globals())
+        else:
+            print("Some parts of your command aren't authorized")
+            
         result = bytes(s)
         if (len(result) > 0):
             _socket.sendto(str((wifi.device_id, identifier, result)).encode(), address)
         os.dupterm(None)
+
+def filter_incoming_command(command):
+    filters = ['open(', 'rewriter.authenticated', 'rewriter.rewriter_setup', 'rewriter.rewriter_password', 'pysaver']
+    
+    safe = True
+        
+    command = command.replace(' ', '')
+    command = command.replace('\t', '')
+    
+    for fil in filters:
+        if fil in command:
+            safe = False
+            
+    return safe
 
 op_codes = { "0x5000":color_from_artnet, "0x4000":artnet_repl }
 
