@@ -19,6 +19,7 @@ callback = None
 
 artnet_length = 5
 artnet_start_offset = pysaver.load("artnet_start_offset", 0, True)
+artnet_start_universe = pysaver.load("artnet_start_universe", 0, True)
 
 artnet_offset_waiter_task = None
 
@@ -82,8 +83,8 @@ def check_op_code(address, packet):
         op_codes[packet.op_code](address, packet)
         
 def color_from_artnet(address, packet):
-    global artnet_start_offset, artnet_length
-    if packet.universe == 0:
+    global artnet_start_offset, artnet_length, artnet_start_universe
+    if packet.universe == artnet_start_universe:
         color_data = packet.data[artnet_start_offset:artnet_start_offset+artnet_length]
         red = color_data[0]
         green = color_data[1]
