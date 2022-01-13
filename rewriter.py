@@ -109,16 +109,19 @@ def missing_pieces():
         print("Not currently uploading")
     
 def write_file():
-    global full_file, path
-    try:
-        write_file=open(path, "w")
-        write_file.write(full_file)
-        write_file.close()
-        print("Uploaded. File " + path + " modified")
-        reset()
-    except Exception as e:
-        print (str(e))
-        reset()
+    global full_file, path, receiving_data
+    if receiving_data:
+        try:
+            write_file=open(path, "w")
+            write_file.write(full_file)
+            write_file.close()
+            print("Uploaded. File " + path + " modified")
+            reset()
+        except Exception as e:
+            print (str(e))
+            reset()
+    else:
+        print("Not currently uploading")
 
 def reset():
     global receiving_data, total_pieces, received_pieces, pieces_list, full_file, path

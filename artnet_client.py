@@ -9,6 +9,7 @@ import io
 import os
 import tags
 import wifi
+import rewriter
 
 server = '0.0.0.0'
 port = 6454
@@ -127,18 +128,21 @@ def artnet_repl(address, packet):
         os.dupterm(None)
 
 def filter_incoming_command(command):
-    filters = ['open(', 'rewriter.authenticated', 'rewriter.rewriter_setup', 'rewriter.rewriter_password', 'pysaver']
+    if not rewriter.authenticated:
+        filters = ['open(', 'rewriter.authenticated', 'rewriter.rewriter_setup', 'rewriter.rewriter_password', 'rewriter.receiving_data', 'pysaver']
     
-    safe = True
+        safe = True
         
-    command = command.replace(' ', '')
-    command = command.replace('\t', '')
+        command = command.replace(' ', '')
+        command = command.replace('\t', '')
     
-    for fil in filters:
-        if fil in command:
-            safe = False
+        for fil in filters:
+            if fil in command:
+                safe = False
             
-    return safe
+        return safe
+    else:
+        return True
 
 op_codes = { "0x5000":color_from_artnet, "0x4000":artnet_repl }
 
