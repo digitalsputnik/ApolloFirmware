@@ -19,7 +19,7 @@ callback = None
 
 artnet_length = 5
 artnet_start_offset = pysaver.load("artnet_start_offset", 0, True)
-artnet_start_universe = pysaver.load("artnet_start_universe", 1, True)
+artnet_start_universe = pysaver.load("artnet_start_universe", 0, True)
 
 artnet_offset_waiter_task = None
 
