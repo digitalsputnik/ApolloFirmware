@@ -157,28 +157,32 @@ def set_color(r_in=0, g_in=0, b_in=0, wb_in=0, fx_in=0):
     global target_color, max_temp_reached, is_on
     
     if not max_temp_reached and is_on:
+        # fx implementation
+        # stream live data to the fx_buffer and use RGBtX controls for asjust light with any Art-Net controller
+        r_base = r_in * (256-fx_in) >> 8
+        g_base = g_in * (256-fx_in) >> 8
+        b_base = b_in * (256-fx_in) >> 8
         
-        print("before - " + str((r_in, g_in, b_in)))
+        r_fx = r_in * (fx_buffer[0][0]+1) >> 8
+        g_fx = g_in * (fx_buffer[0][1]+1) >> 8
+        b_fx = b_in * (fx_buffer[0][2]+1) >> 8
+
+        r_fx *= (fx_in+1) >> 8
+        g_fx *= (fx_in+1) >> 8
+        b_fx *= (fx_in+1) >> 8
         
-        r_in = r_in * ((255 - fx_in) / 255)
-        g_in = g_in * ((255 - fx_in) / 255)
-        b_in = b_in * ((255 - fx_in) / 255)
+        r_in = r_base + r_fx
+        g_in = g_base + g_fx
+        b_in = b_base + b_fx
         
-        r_in += fx_buffer[0][0] * (fx_in / 255)
-        g_in += fx_buffer[0][1] * (fx_in / 255)
-        b_in += fx_buffer[0][2] * (fx_in / 255)
-        
-        r_in = int(r_in)
-        g_in = int(g_in)
-        b_in = int(b_in)
-        
-        print("after - " + str((r_in, g_in, b_in)))
-        
+        # make lowest 8bit as 10bit had malloc issues
+        # TODO: needs proper 8bit->10bit log lut
         inputs = [r_in*4, g_in*4, b_in*4]
         lowest = min((inputs))
-        # make lowest 8bit as 10bit had malloc issues
         lowest = int(lowest/4)
-    
+ 
+        # calculate WB portion from 0-255
+        # the full range is 1500-10000K therefore 8500/255 = 33.33K increments
         wb_in = wb_in*33.33334+1500
         
         ranges = [500,800,400,1600,800,2200,2200]
@@ -206,6 +210,8 @@ def set_color(r_in=0, g_in=0, b_in=0, wb_in=0, fx_in=0):
         overflow = wb_in-values[temp_base]
         overflow1024 = int(overflow/ranges[temp_base]*1023)
         
+        
+        # interpolate RGBW values from the 2 closest calibrated WB points
         wbBaseA = list(calibration[temp_base][lowest])
         wbBaseB = list(calibration[temp_base+1][lowest])
         

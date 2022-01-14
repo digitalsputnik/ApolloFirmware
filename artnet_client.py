@@ -17,6 +17,8 @@ port = 6454
 led_color = (100,255,0)
 
 callback = None
+last_packet = None
+last_values = None
 
 artnet_length = 5
 artnet_start_offset = pysaver.load("artnet_start_offset", 0, True)
@@ -84,9 +86,14 @@ def check_op_code(address, packet):
         op_codes[packet.op_code](address, packet)
         
 def color_from_artnet(address, packet):
-    global artnet_start_offset, artnet_length, artnet_start_universe
+    global artnet_start_offset, artnet_length, artnet_start_universe, last_packet, last_values
+    
+    last_packet = packet
+    
     if packet.universe == artnet_start_universe:
         color_data = packet.data[artnet_start_offset:artnet_start_offset+artnet_length]
+        last_values = color_data
+        
         red = color_data[0]
         green = color_data[1]
         blue = color_data[2]
