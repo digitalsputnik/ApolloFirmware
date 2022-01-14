@@ -83,21 +83,6 @@ async def connect_to_smallest_apollo(callback=None):
         else:
             print("Apollo not found")
             await asyncio.sleep(5)
-            
-def connect(ssid, pw):
-    global sta_if, connected, network_mode, AP, CLIENT, APOLLO_CLIENT, wifi_ssid, wifi_pw
-    network_mode = CLIENT
-    wifi_ssid = ssid
-    wifi_pw = pw
-    update_led()
-    pysaver.save("network_mode", network_mode)
-    pysaver.save("wifi_ssid", wifi_ssid)
-    pysaver.save("wifi_pw", wifi_pw)
-    machine.reset()
-
-def delete_saved_ssid():
-    pysaver.delete("wifi_ssid")
-    pysaver.delete("wifi_pw")
 
 async def start_connecting(ssid,pw,callback=None):
     global sta_if
@@ -113,6 +98,24 @@ async def start_connecting(ssid,pw,callback=None):
     if callback != None:
         callback(sta_if.isconnected())
     print('\nNetwork config:', sta_if.ifconfig())
+    
+def change_network_mode(mode = 0, ssid="", pw=""):
+    global network_mode, CLIENT, wifi_ssid, wifi_pw
+    
+    network_mode = mode
+    pysaver.save("network_mode", network_mode)
+    
+    if mode is CLIENT:
+        wifi_ssid = ssid
+        wifi_pw = pw
+        pysaver.save("wifi_ssid", wifi_ssid)
+        pysaver.save("wifi_pw", wifi_pw)
+    update_led()
+    machine.reset()
+
+def delete_saved_ssid():
+    pysaver.delete("wifi_ssid")
+    pysaver.delete("wifi_pw")
     
 def scan_ssids():
     global sta_if
