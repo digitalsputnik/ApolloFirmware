@@ -16,13 +16,17 @@ port = 6454
 
 led_color = (100,255,0)
 
-callback = None
-last_packet = None
-last_values = None
+callback_control = None
+callback_fx = None
+
+# for debuging purposes
+# todo, split the answer for last packet as it is too long for one aswer packet
+last_fx = None
+last_control = None
 
 artnet_length = 5
-artnet_start_offset = pysaver.load("artnet_start_offset", 0, True)
-artnet_start_universe = pysaver.load("artnet_start_universe", 0, True)
+artnet_fx = pysaver.load("artnet_fx", [1,0], True)
+artnet_control = pysaver.load("artnet_control", [0,0], True)
 
 artnet_offset_waiter_task = None
 
@@ -36,10 +40,10 @@ async def __setup__():
     _socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
     _socket.bind((server,port))
     _socket.setblocking(False)
-    print("Art-Net Started. Offset - " + str(artnet_start_offset))
+    print("Art-Net Started. Offset - " + str(artnet_control[1]))
     
 async def __slowloop__():
-    global _socket, artnet_start_offset, callback
+    global _socket, callback_control
     update_led()
     try:
         data, address = _socket.recvfrom(1024)
@@ -56,21 +60,21 @@ async def __slowerloop__():
     update_led()
     
 async def toggle_artnet_offset_waiter():
-    global artnet_start_offset
+    global artnet_control
     while True:
         await flags.program_short_flag.wait()
         
-        artnet_start_offset += 5
-        if (artnet_start_offset == 30):
-            artnet_start_offset = 0
+        artnet_control[1] += 5
+        if (artnet_control[1] == 30):
+            artnet_control[1] = 0
             
-        pysaver.save("artnet_start_offset", artnet_start_offset)
-        print("Art-Net Offset Changed - " + str(artnet_start_offset))
+        pysaver.save("artnet_control", [artnet_control[0],artnet_control[1]])
+        print("Art-Net Offset Changed - " + str(artnet_control[1]))
 
 def update_led():
-    global artnet_start_offset, led_color
+    global artnet_control, led_color
     led.unlock_all_leds()
-    new_led = int(artnet_start_offset/5)
+    new_led = int(artnet_control[1]/5)
     led.set_led(new_led, led_color)
     led.lock_led(new_led)
     
@@ -86,13 +90,19 @@ def check_op_code(address, packet):
         op_codes[packet.op_code](address, packet)
         
 def color_from_artnet(address, packet):
-    global artnet_start_offset, artnet_length, artnet_start_universe, last_packet, last_values
+    global artnet_control, artnet_length, last_control, last_fx, last_values
     
-    last_packet = packet
+    if packet.universe == artnet_fx[0]:
+        color_data = packet.data[artnet_fx[1]:artnet_control[0]+3]
+        last_fx = (packet,color_data)
+        
+        if callback_fx != None:
+            callback_fx(color_data[0],color_data[1],color_data[2])
     
-    if packet.universe == artnet_start_universe:
-        color_data = packet.data[artnet_start_offset:artnet_start_offset+artnet_length]
-        last_values = color_data
+    # controller universe
+    if packet.universe == artnet_control[0]:
+        color_data = packet.data[artnet_control[1]:artnet_control[1]+artnet_length]
+        last_control = (packet,color_data)
         
         red = color_data[0]
         green = color_data[1]
@@ -100,8 +110,8 @@ def color_from_artnet(address, packet):
         white = color_data[3]
         fx = color_data[4]
                 
-        if callback != None:
-            callback(red,green,blue,white,fx)
+        if callback_control != None:
+            callback_control(red,green,blue,white,fx)
         
 def artnet_repl(address, packet):
     global _socket

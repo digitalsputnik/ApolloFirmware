@@ -18,6 +18,7 @@ current_color = pysaver.load("current_color", (10, 10, 10, 10))
 target_color = current_color
 
 fx_buffer = [(255,255,255)]
+color_buffer = [(0,0,0,123,0)]
 
 _pwm = []
 
@@ -39,7 +40,8 @@ running = False
 
 async def __setup__():
     global _pwn, red_pin, green_pin, blue_pin, white_pin, calibration, temp_sensor, power_status_task, default_color_task, running
-    artnet_client.callback = set_color
+    artnet_client.callback_control = set_color
+    artnet_client.callback_fx = set_fx
     
     power_status_task = asyncio.create_task(toggle_power_status_waiter())
     default_color_task = asyncio.create_task(set_default_color_waiter())
@@ -153,8 +155,22 @@ def turn_leds_off():
 def turn_leds_on():
     machine.Pin(27, machine.Pin.OUT, value=1)
 
-def set_color(r_in=0, g_in=0, b_in=0, wb_in=0, fx_in=0):
+def set_fx(r_in=255, g_in=255, b_in=255):
+    fx_buffer[0] = (r_in, g_in, b_in)
+    render_color()
+
+def set_color(r_in=0, g_in=0, b_in=0, wb_in=123, fx_in=0):
+    color_buffer[0] = (r_in, g_in, b_in, wb_in, fx_in)
+    render_color()
+
+def render_color():
     global target_color, max_temp_reached, is_on
+    
+    r_in = color_buffer[0][0]
+    g_in = color_buffer[0][1]
+    b_in = color_buffer[0][2]
+    wb_in = color_buffer[0][3]
+    fx_in = color_buffer[0][4]
     
     if not max_temp_reached and is_on:
         # fx implementation
