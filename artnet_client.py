@@ -135,7 +135,10 @@ def artnet_repl(address, packet):
         os.dupterm(console_out(s))
         
         if safe:
-            exec(command, globals())
+            try:
+                exec(command, globals())
+            except Exception as err:
+                print(err)
         else:
             print("Some parts of your command aren't authorized")
             
