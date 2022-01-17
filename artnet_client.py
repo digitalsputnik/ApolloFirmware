@@ -79,7 +79,7 @@ def update_led():
     led.lock_led(new_led)
     
 def is_artnet_packet(data):
-    if data[:8] != b'Art-Net\x00':
+    if data[:7] != b'Art-Net':
         return False
     else:
         return True
