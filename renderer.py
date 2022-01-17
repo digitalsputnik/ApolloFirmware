@@ -162,6 +162,7 @@ def set_fx(r_in=255, g_in=255, b_in=255):
 def set_color(r_in=0, g_in=0, b_in=0, wb_in=123, fx_in=0):
     color_buffer[0] = (r_in, g_in, b_in, wb_in, fx_in)
     render_color()
+    
 
 def render_color():
     global target_color, max_temp_reached, is_on
@@ -182,10 +183,10 @@ def render_color():
         r_fx = r_in * (fx_buffer[0][0]+1) >> 8
         g_fx = g_in * (fx_buffer[0][1]+1) >> 8
         b_fx = b_in * (fx_buffer[0][2]+1) >> 8
-
-        r_fx *= (fx_in+1) >> 8
-        g_fx *= (fx_in+1) >> 8
-        b_fx *= (fx_in+1) >> 8
+        
+        r_fx = r_fx * (fx_in+1) >> 8
+        g_fx = g_fx * (fx_in+1) >> 8
+        b_fx = b_fx * (fx_in+1) >> 8
         
         r_in = r_base + r_fx
         g_in = g_base + g_fx
