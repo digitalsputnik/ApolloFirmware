@@ -134,13 +134,13 @@ async def blink_effect_loop():
             
             if (on and remainder >= 0 and remainder < 1000):
                 on = False
-                fx_buffer = [(0,0,0)]
+                set_fx(0,0,0)
                 print(str(fx_buffer) + ", " + str(remainder))
             elif (not on and remainder >= 1000):
                 on = True
-                fx_buffer = [(255,255,255)]
+                set_fx(255,255,255)
                 print(str(fx_buffer) + ", " + str(remainder))
-            # Removing the await makes timesync accurate to the millisecond but blocks further repl commands
+            # Removing the await makes timesync improves accuracy but blocks further repl commands
             else:
                 await asyncio.sleep(0)
         else:
@@ -190,7 +190,6 @@ def set_color(r_in=0, g_in=0, b_in=0, wb_in=123, fx_in=0):
     color_buffer[0] = (r_in, g_in, b_in, wb_in, fx_in)
     render_color()
     
-
 def render_color():
     global target_color, max_temp_reached, is_on
     
