@@ -6,6 +6,8 @@ import lm75
 import flags
 import pysaver
 import Data.pins as pins
+import timesync
+import time
 
 red_pin = pins.red_pin
 green_pin = pins.green_pin
@@ -45,6 +47,9 @@ async def __setup__():
     
     power_status_task = asyncio.create_task(toggle_power_status_waiter())
     default_color_task = asyncio.create_task(set_default_color_waiter())
+    
+    # Temp timesync test loop
+    blink_loop_task = asyncio.create_task(blink_effect_loop())
     
     # disable all outputs to avoid blinking during setup 
     turn_leds_off()
@@ -118,6 +123,28 @@ async def __loop__():
 #             turn_leds_off()
 #             is_on = False
 #             max_temp_reached = True
+
+# Temp function for timesync testing
+async def blink_effect_loop():
+    global fx_buffer
+    on = True
+    while True:
+        if timesync.synced:
+            remainder = (time.ticks_ms() + timesync.offset) % 2000
+            
+            if (on and remainder >= 0 and remainder < 1000):
+                on = False
+                fx_buffer = [(0,0,0)]
+                print(str(fx_buffer) + ", " + str(remainder))
+            elif (not on and remainder >= 1000):
+                on = True
+                fx_buffer = [(255,255,255)]
+                print(str(fx_buffer) + ", " + str(remainder))
+            # Removing the await makes timesync accurate to the millisecond but blocks further repl commands
+            else:
+                await asyncio.sleep(0)
+        else:
+            await asyncio.sleep(1)
 
 async def toggle_power_status_waiter():
     global is_on, current_color, pins_enabled, max_temp_reached
