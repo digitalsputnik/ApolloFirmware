@@ -142,6 +142,7 @@ async def blink_effect_loop():
                 print(str(fx_buffer) + ", " + str(remainder))
             # Removing the await makes timesync improves accuracy but blocks further repl commands
             else:
+                # We await sleep 0 to let other async functions pass while waiting
                 await asyncio.sleep(0)
         else:
             await asyncio.sleep(1)
