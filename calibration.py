@@ -168,7 +168,6 @@ class calibrate():
             
     def export(self):
         print(self.get_calib())
-        pysaver.delete("colorpoints")
         
     def get_calib(self):
         out = ()
