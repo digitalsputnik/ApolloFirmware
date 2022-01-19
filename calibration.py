@@ -1,4 +1,17 @@
-from Data.saved_calibration import lamp_calibration
+def convert_calib(calib_in):
+    out = ()
+    for i in calib_in:
+        out += tuple(i)
+        
+    return out
+
+try:
+    from Data._colorpoints import colorpoints
+    lamp_calibration = convert_calib(colorpoints)
+    print("Custom calibration loaded")
+except Exception as e:
+    from Data.default_calibration import default_calibration as lamp_calibration
+    print("Default calibration loaded - " + str(e))
 
 _lut = ("1500K","2000K","2800K","3200K","4800K","5600K","7800K","10 000K")
 
@@ -43,10 +56,8 @@ WB(Kelvin) range, dUV range and the new R,G,B,W values.
 compare these values to values shown by Sekonic
 and change offsets using c.update()[shown above]
 until lamp values are in between preferred ranges. 
-2. Export output and copy to the Data.saved_calibration.py line 1 lamp_calibration variable
-c.export()
     
-3. Once you've saved the edit in Thonny
+2. Once done -
 machine.reset()   #...will load the new calibration table
 This tutorial and calibration was made using Sekonic c-7000
 To use this model of Sekonic, select Spectrum on the Sekonic main screen
@@ -62,7 +73,6 @@ import machine
 import time
 import os
 import pysaver
-import Data.pins as pins
 import renderer
 
 class calibrate():
@@ -87,14 +97,7 @@ class calibrate():
     _colorpoints = []
     _lx = []
     
-    _pwm = []
-    
-    def __init__(self, red_pin = pins.red_pin, green_pin = pins.green_pin, blue_pin = pins.blue_pin, white_pin = pins.white_pin):
-        self._pwm.append(machine.PWM(machine.Pin(red_pin)))
-        self._pwm.append(machine.PWM(machine.Pin(green_pin)))
-        self._pwm.append(machine.PWM(machine.Pin(blue_pin)))
-        self._pwm.append(machine.PWM(machine.Pin(white_pin)))
-        self._pwm[0].freq(19000)
+    def __init__(self):
         
         # The **ideals** measured at DSL on 11th Nov 2021 on Apollo0003(Prototype:MockupII)
         self._colorpoints.append([(4, 1, 0, 0), (243, 126, 0, 0), (486, 251, 0, 0), (729, 373, 0, 0), (973, 481, 0, 0)])
@@ -165,22 +168,8 @@ class calibrate():
         pysaver.save("colorpoints", self._colorpoints)
         
         renderer.target_color = (out[0], out[1], out[2], out[3])
-            
-    def export(self):
-        print(self.get_calib())
-        
-    def get_calib(self):
-        out = ()
-        for i in self._colorpoints:
-            out += tuple(i)
-        
-        return str(out)
         
     def test(self, output, time_in=0.3):
         for i in range(256):
             output.setColor(i,i,i)
             time.sleep(time_in)
-        
-        
-
-        
