@@ -1,64 +1,56 @@
-import io
-import os
+import uasyncio as asyncio
 import socket
 from struct import pack, unpack
-import uasyncio as asyncio
-import led_controller as led
 import pysaver
+import flags
+import led_controller as led
+import time
+import io
+import os
+import tags
 import wifi
 import rewriter
-import tags
-import flags
 
-# Artnet ip & port. Default is broadcast ip and port 6454
-_server = '0.0.0.0'
-_port = 6454
+server = '0.0.0.0'
+port = 6454
 
-# Color of led indicator on informative led strip (apa/neopixel)
-_led_color = (100,255,0)
+led_color = (100,255,0)
 
-# Length of artnet data group
-_artnet_length = 5
-_artnet_fx = pysaver.load("artnet_fx", [1,0], True)
-_artnet_control = pysaver.load("artnet_control", [0,0], True)
-
-# for debuging purposes
-# todo, split the answer for last packet as it is too long for one aswer packet
-_last_fx = None
-_last_control = None
-
-# Callbacks
 callback_control = None
 callback_fx = None
 
-# Button press listener task
+# for debuging purposes
+# todo, split the answer for last packet as it is too long for one aswer packet
+last_fx = None
+last_control = None
+
+artnet_length = 5
+artnet_fx = pysaver.load("artnet_fx", [1,0], True)
+artnet_control = pysaver.load("artnet_control", [0,0], True)
+
 artnet_offset_waiter_task = None
 
 async def __setup__():
     global _socket, artnet_offset_waiter_task
+    
     update_led()
     
     artnet_offset_waiter_task = asyncio.create_task(toggle_artnet_offset_waiter())
     
     _socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-    _socket.bind((_server,_port))
+    _socket.bind((server,port))
     _socket.setblocking(False)
-    
-    print("Art-Net Started. Offset - " + str(_artnet_control[1]))
+    print("Art-Net Started. Offset - " + str(artnet_control[1]))
     
 async def __slowloop__():
     global _socket, callback_control
     update_led()
-    
     try:
-        _data, _address = _socket.recvfrom(1024)
+        data, address = _socket.recvfrom(1024)
         
-        # Check if incoming packet is an artnet packet
-        if is_artnet_packet(_data):
-            # Decode packet into an object
-            _packet = ArtNetPacket(_data)
-            # Check packet type
-            check_op_code(_address, _packet)
+        if is_artnet_packet(data):
+            packet = ArtNetPacket(data)
+            check_op_code(address, packet)
         else:
             print("Received a non Art-Net packet")
     except Exception as e:
@@ -68,148 +60,120 @@ async def __slowerloop__():
     update_led()
     
 async def toggle_artnet_offset_waiter():
-    global _artnet_control
-    # Non terminating loop for button press detection
+    global artnet_control
     while True:
-        # On button press, program_short_flag is set which stops waiting.
         await flags.program_short_flag.wait()
         
-        # Update artnet offset.
-        _artnet_control[1] += 5
-        if (_artnet_control[1] == 30):
-            _artnet_control[1] = 0
-        
-        # Save updated offset
-        pysaver.save("artnet_control", [_artnet_control[0],_artnet_control[1]])
-        
-        print("Art-Net Offset Changed - " + str(_artnet_control[1]))
+        artnet_control[1] += 5
+        if (artnet_control[1] == 30):
+            artnet_control[1] = 0
+            
+        pysaver.save("artnet_control", [artnet_control[0],artnet_control[1]])
+        print("Art-Net Offset Changed - " + str(artnet_control[1]))
 
-# Function to check if a packet is artnet
-def is_artnet_packet(_data):
-    if _data[:7] != b'Art-Net':
+def update_led():
+    global artnet_control, led_color
+    led.unlock_all_leds()
+    new_led = int(artnet_control[1]/5)
+    led.set_led(new_led, led_color)
+    led.lock_led(new_led)
+    
+def is_artnet_packet(data):
+    if data[:7] != b'Art-Net':
         return False
     else:
         return True
-
-# Function to check op_code in packet, supported op_codes are in a list on line 193
-def check_op_code(_address, _packet):
-    global _op_codes
-    if _packet.op_code in _op_codes:
-        _op_codes[_packet.op_code](_address, _packet)
-
-# Handle color artnet packet
-def color_from_artnet(_address, _packet):
-    global _artnet_control, _artnet_length, _last_control, _last_fx, _last_values
     
-    # Check if universe is fx universe
-    if _packet.universe == _artnet_fx[0]:
-        _color_data = _packet.data[_artnet_fx[1]:_artnet_control[0]+3]
-        _last_fx = (_packet,_color_data)
+def check_op_code(address, packet):
+    global op_codes
+    if packet.op_code in op_codes:
+        op_codes[packet.op_code](address, packet)
         
-        # if callback is not null, call callback with received data
+def color_from_artnet(address, packet):
+    global artnet_control, artnet_length, last_control, last_fx, last_values
+    
+    if packet.universe == artnet_fx[0]:
+        color_data = packet.data[artnet_fx[1]:artnet_control[0]+3]
+        last_fx = (packet,color_data)
+        
         if callback_fx != None:
-            callback_fx(_color_data[0],_color_data[1],_color_data[2])
+            callback_fx(color_data[0],color_data[1],color_data[2])
     
-    # Check if universe is color universe
-    if _packet.universe == _artnet_control[0]:
-        _color_data = _packet.data[_artnet_control[1]:_artnet_control[1]+_artnet_length]
-        _last_control = (_packet,_color_data)
+    # controller universe
+    if packet.universe == artnet_control[0]:
+        color_data = packet.data[artnet_control[1]:artnet_control[1]+artnet_length]
+        last_control = (packet,color_data)
         
-        # Parse color data
-        _red = _color_data[0]
-        _green = _color_data[1]
-        _blue = _color_data[2]
-        _white = _color_data[3]
-        _fx = _color_data[4]
-        
-        # if callback is not null, call callback with received data
+        red = color_data[0]
+        green = color_data[1]
+        blue = color_data[2]
+        white = color_data[3]
+        fx = color_data[4]
+                
         if callback_control != None:
-            callback_control(_red,_green,_blue,_white,_fx)
-
-# Handle artnet repl packet
-def artnet_repl(_address, _packet):
+            callback_control(red,green,blue,white,fx)
+        
+def artnet_repl(address, packet):
     global _socket
-    _correct_tag = False
+    correct_tag = False
+    packet_tuple = parse_tuple(packet.data.decode())
+    identifier = packet_tuple[0]
+    sent_tags = packet_tuple[1]
+    command = packet_tuple[2]
     
-    # Parse incoming data into variables
-    _packet_tuple = parse_tuple(_packet.data.decode())
-    
-    # Unique uuid for each packet to verify answers
-    _identifier = _packet_tuple[0]
-    
-    # Tags on which the command should be ran
-    _sent_tags = _packet_tuple[1]
-    _command = _packet_tuple[2]
-    
-    # If tags is an empty list, the command should be ran on all devices in network
-    if (len(_sent_tags) == 0):
-        _correct_tag = True
+    if (len(sent_tags) == 0):
+        correct_tag = True
     else:
-        for _tag in _sent_tags:
-            if (tags.has_tag(_tag)):
-                _correct_tag = True
+        for tag in sent_tags:
+            if (tags.has_tag(tag)):
+                correct_tag = True
     
-    if _correct_tag:
-        # Some actions are not allowed until authorized in rewriter.
-        # Here we check if any of the forbidden actions are in the received command
-        _safe = filter_incoming_command(_command)
+    if correct_tag:
+        safe = filter_incoming_command(command)
         
-        _s = bytearray()
-        os.dupterm(console_out(_s))
+        s = bytearray()
+        os.dupterm(console_out(s))
         
-        if _safe:
+        if safe:
             try:
-                exec(_command, globals())
-            except Exception as _err:
-                print(_err)
+                exec(command, globals())
+            except Exception as err:
+                print(err)
         else:
             print("Some parts of your command aren't authorized")
             
-        _result = bytes(_s)
-        if (len(_result) > 0):
-            # Send back printed data, if any was printed
-            _socket.sendto(str((wifi.device_id, _identifier, _result)).encode(), _address)
+        result = bytes(s)
+        if (len(result) > 0):
+            _socket.sendto(str((wifi.device_id, identifier, result)).encode(), address)
         os.dupterm(None)
 
-def filter_incoming_command(_command):
+def filter_incoming_command(command):
     if not rewriter.authenticated:
-        # Keywords that are not allowed in the command
-        _filters = ['open(', 'rewriter.authenticated', 'rewriter._rewriter_setup', 'rewriter._rewriter_password', 'rewriter._receiving_data', 'pysaver']
+        filters = ['open(', 'rewriter.authenticated', 'rewriter.rewriter_setup', 'rewriter.rewriter_password', 'rewriter.receiving_data', 'pysaver']
     
-        _safe = True
+        safe = True
         
-        _command = _command.replace(' ', '')
-        _command = _command.replace('\t', '')
+        command = command.replace(' ', '')
+        command = command.replace('\t', '')
     
-        for _filter in _filters:
-            if _filter in _command:
-                _safe = False
+        for fil in filters:
+            if fil in command:
+                safe = False
             
-        return _safe
+        return safe
     else:
         return True
 
-# Packet op_codes with functions to run when an op_code is detected
-_op_codes = { "0x5000":color_from_artnet, "0x4000":artnet_repl }
+op_codes = { "0x5000":color_from_artnet, "0x4000":artnet_repl }
 
-# Function to update status on apa/neopixel leds
-def update_led():
-    global _artnet_control, _led_color
-    led.unlock_all_leds()
-    _new_led = int(_artnet_control[1]/5)
-    led.set_led(_new_led, _led_color)
-    led.lock_led(_new_led)
-
-# Helper function to parse a tuple from a string
-def parse_tuple(_string):
+def parse_tuple(string):
     try:
-        _s = eval(_string)
-        if type(_s) == tuple:
-            return _s
+        s = eval(string)
+        if type(s) == tuple:
+            return s
     except:
         pass
 
-# Helper class to read printed data
 class console_out(io.IOBase):
 
     def __init__(self, s):
@@ -222,7 +186,6 @@ class console_out(io.IOBase):
     def readinto(self, data):
         return 0
 
-# Artnet Packet data class
 class ArtNetPacket:
     def __init__(self, data = None):
         if (data != None):

@@ -6,31 +6,29 @@ import pysaver
 import Data.pins as pins
 
 # Button Pins
-_power_pin = pins.power_pin
-_program_pin = pins.program_pin
+power_pin = pins.power_pin
+program_pin = pins.program_pin
 
 # Button actions
-_power_short = flags.power_short_flag.set # currently waited for in renderer
-_power_long = flags.power_long_flag.set # currently waited for in renderer
-_program_short = flags.program_short_flag.set # currently waited for in artnet_client
-_program_long = flags.program_long_flag.set # currently waited for in wifi
+power_short = flags.power_short_flag.set # currently waited for in renderer
+power_long = flags.power_long_flag.set # currently waited for in renderer
+program_short = flags.program_short_flag.set # currently waited for in artnet_client
+program_long = flags.program_long_flag.set # currently waited for in wifi
 
 async def __setup__():
-    global _power_pin, _program_pin
+    global power_pin, program_pin
     
-    # Create button objects
-    _power_button = Pushbutton(Pin(_power_pin, Pin.IN, Pin.PULL_UP), True)
-    _program_button = Pushbutton(Pin(_program_pin, Pin.IN, Pin.PULL_UP), True)
+    power_button = Pushbutton(Pin(power_pin, Pin.IN, Pin.PULL_UP), True)
+    program_button = Pushbutton(Pin(program_pin, Pin.IN, Pin.PULL_UP), True)
     
-    # Set button actions if actions arent None
-    if _power_short != None:
-        _power_button.release_func(_power_short)
+    if power_short != None:
+        power_button.release_func(power_short)
     
-    if _power_long != None:
-        _power_button.long_func(_power_long)
+    if power_long != None:
+        power_button.long_func(power_long)
     
-    if _program_short != None:
-        _program_button.release_func(_program_short)
+    if program_short != None:
+        program_button.release_func(program_short)
     
-    if _program_long != None:
-        _program_button.long_func(_program_long)
+    if program_long != None:
+        program_button.long_func(program_long)
