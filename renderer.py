@@ -17,6 +17,7 @@ is_on = pysaver.load("is_on", True)
 current_color = pysaver.load("current_color", (10, 10, 10, 10))
 target_color = current_color
 
+py_buffer = (255,255,255)
 fx_buffer = [(255,255,255)]
 color_buffer = [(0,0,0,123,0)]
 
@@ -155,6 +156,11 @@ def turn_leds_off():
 def turn_leds_on():
     machine.Pin(27, machine.Pin.OUT, value=1)
 
+def set_py_buffer(r_in=255, g_in=255, b_in=255):
+    global py_buffer
+    py_buffer = (r_in, g_in, b_in)
+    render_color()
+
 def set_fx(r_in=255, g_in=255, b_in=255):
     fx_buffer[0] = (r_in, g_in, b_in)
     render_color()
@@ -164,11 +170,11 @@ def set_color(r_in=0, g_in=0, b_in=0, wb_in=123, fx_in=0):
     render_color()
     
 def render_color():
-    global target_color, max_temp_reached, is_on
+    global target_color, max_temp_reached, is_on, py_buffer
     
-    r_in = color_buffer[0][0]
-    g_in = color_buffer[0][1]
-    b_in = color_buffer[0][2]
+    r_in = color_buffer[0][0] * py_buffer[0] >> 8
+    g_in = color_buffer[0][1] * py_buffer[1] >> 8
+    b_in = color_buffer[0][2] * py_buffer[2] >> 8
     wb_in = color_buffer[0][3]
     fx_in = color_buffer[0][4]
     
