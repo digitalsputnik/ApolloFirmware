@@ -1,4 +1,5 @@
 import uasyncio as asyncio
+import Data.pins as pins
 import machine
 
 main_loop_frequency = 5
@@ -30,6 +31,14 @@ async def slower_loop():
 
 async def setup():
     global import_modules, setup_tasks, main_tasks, slow_tasks, slower_tasks
+    
+    # Run custom script if program button isn't held down
+    # TODO - Indicate to user when script has been ignored to avoid accidental wifi connection type changes (default program button action)
+    # NOTE - It seems like checking for pin value slows boot time, needs further research
+    program_button = machine.Pin(pins.program_pin, machine.Pin.IN, machine.Pin.PULL_UP)
+    
+    if program_button.value() is 1:
+        import custom_script
     
     setup_tasks = []
     main_tasks = []
