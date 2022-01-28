@@ -4,13 +4,13 @@ import network
 import pysaver
 import flags
 import led_controller as led
+import time
 
 connected = False
 network_mode_waiter_task = None
 
 AP = 0
-APOLLO_CLIENT = 1
-CLIENT = 2
+CLIENT = 1
 
 network_mode = pysaver.load("network_mode", AP, True)
 
@@ -20,38 +20,31 @@ wifi_pw = pysaver.load("wifi_pw", None)
 device_id = pysaver.load("device_id", "ApolloXXXX", True)
     
 async def __setup__():
-    global network_mode_waiter_task, network_mode, AP, CLIENT, APOLLO_CLIENT, wifi_ssid, wifi_pw
+    global network_mode_waiter_task, network_mode, AP, CLIENT, wifi_ssid, wifi_pw
     update_led()
     
     network_mode_waiter_task = asyncio.create_task(toggle_network_mode_waiter())
     
-    if network_mode is AP:
-        await set_ap()
-    elif network_mode is APOLLO_CLIENT:
-        await connect_to_smallest_apollo()
-    elif network_mode is CLIENT and wifi_ssid is not None:
-        await start_connecting(wifi_ssid, wifi_pw)
+    if network_mode is CLIENT:
+        await set_client()
     else:
-        print("Ssid not set, setting AP")
         await set_ap()
 
 async def __slowerloop__():
     global connected, sta_if
-    connected = sta_if.isconnected()
+    try:
+        connected = sta_if.isconnected()
+    except:
+        pass
     update_led()
     
 async def toggle_network_mode_waiter():
-    global network_mode, AP, CLIENT, APOLLO_CLIENT, wifi_ssid, wifi_pw
+    global network_mode, AP, CLIENT, wifi_ssid, wifi_pw
     while True:
         await flags.program_long_flag.wait()
-        if wifi_ssid is None:
-            network_mode = network_mode + 1
-            if network_mode > 1:
-                network_mode = 0
-        else:
-            network_mode = network_mode + 1
-            if network_mode > 2:
-                network_mode = 0
+        network_mode = network_mode + 1
+        if network_mode > 1:
+            network_mode = 0
         update_led()
         pysaver.save("network_mode", network_mode)
         machine.reset()
@@ -65,9 +58,26 @@ async def set_ap():
 
     print('\nNetwork config:', sta_if.ifconfig())
 
-async def connect_to_smallest_apollo(callback=None):
+async def set_client():
+    global wifi_ssid, wifi_pw, connected
+    if wifi_ssid is not None:
+        while connected is False:
+            print("Trying custom client")
+            await start_connecting(wifi_ssid, wifi_pw)
+            
+            if connected is False:
+                print("Trying closest apollo")
+                await connect_to_smallest_apollo()
+    else:
+        while connected is False:
+            await connect_to_smallest_apollo()
+            print("Trying again")
+
+async def connect_to_smallest_apollo(callback=None, timeout_ms=10000):
     apollo_found = False
-    while not apollo_found:
+    timed_out = False
+    start_time = time.ticks_ms()
+    while not apollo_found and not timed_out:
         ssids = scan_ssids()
         smallest_apollo = 9999
         for ssid in ssids:
@@ -82,22 +92,34 @@ async def connect_to_smallest_apollo(callback=None):
             await start_connecting(selected_ssid,"dsputnik", callback)
         else:
             print("Apollo not found")
-            await asyncio.sleep(5)
+            await asyncio.sleep(2)
+            
+        if (time.ticks_ms() - start_time) > timeout_ms:
+            timed_out = True
+            print("Closest Apollo Timed Out")
 
-async def start_connecting(ssid,pw,callback=None):
+async def start_connecting(ssid, pw, callback=None, timeout_ms=10000):
     global sta_if
     sta_if = network.WLAN(network.STA_IF)
     if not sta_if.isconnected():
         print('Connecting to network...')
         sta_if.active(True)
         sta_if.connect(ssid, pw)
-        while not sta_if.isconnected():
+        timed_out = False
+        start_time = time.ticks_ms()
+        while not sta_if.isconnected() and not timed_out:
+            if (time.ticks_ms() - start_time) > timeout_ms:
+                timed_out = True
+                sta_if.active(False)
+                print("\nClient timed out")
             await asyncio.sleep_ms(500)
             print(".", end=" ")
     
     if callback != None:
-        callback(sta_if.isconnected())
-    print('\nNetwork config:', sta_if.ifconfig())
+        callback(connected)
+        
+    if connected:
+        print('\nNetwork config:', sta_if.ifconfig())
     
 def change_network_mode(mode = 0, ssid="", pw=""):
     global network_mode, CLIENT, wifi_ssid, wifi_pw
@@ -110,6 +132,7 @@ def change_network_mode(mode = 0, ssid="", pw=""):
         wifi_pw = pw
         pysaver.save("wifi_ssid", wifi_ssid)
         pysaver.save("wifi_pw", wifi_pw)
+        
     update_led()
     machine.reset()
 
@@ -125,14 +148,18 @@ def scan_ssids():
     return ssids
 
 def update_led():
-    global connected, network_mode, AP
+    global connected, network_mode, AP, sta_if, wifi_ssid
     if network_mode is AP:
         for i in range(6):
             led.set_led(i,(0,0,int(i*30)))
     else:
         if connected:
-            for i in range(6):
-                led.set_led(i,(int(i*30),0,0))
+            if sta_if.config('essid') is wifi_ssid:
+                for i in range(6):
+                    led.set_led(i,(int(i*30),0,0))
+            else:
+                for i in range(6):
+                    led.set_led(i,(int(i*30),int(i*30),0))
         else:
             for i in range(6):
                 led.set_led(i,(0,int(i*30),0))
