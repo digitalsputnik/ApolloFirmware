@@ -128,8 +128,11 @@ def change_network_mode(mode = 0, ssid="", pw=""):
     pysaver.save("network_mode", network_mode)
     
     if mode is CLIENT:
-        wifi_ssid = ssid
-        wifi_pw = pw
+        #change the SSID and PW only if they are provided otherwise keep the saved values
+        if ssid != "":
+            wifi_ssid = ssid
+        if pw != "":
+            wifi_pw = pw
         pysaver.save("wifi_ssid", wifi_ssid)
         pysaver.save("wifi_pw", wifi_pw)
         
