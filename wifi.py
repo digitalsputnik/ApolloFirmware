@@ -56,7 +56,7 @@ async def set_ap():
     sta_if.active(True)
     sta_if.config(essid=device_id, authmode=network.AUTH_WPA_WPA2_PSK, password="dsputnik")
 
-    print('\nNetwork config:', sta_if.ifconfig())
+    print('\nNetwork config: '+str(sta_if.ifconfig()))
 
 async def set_client():
     global wifi_ssid, wifi_pw, connected
