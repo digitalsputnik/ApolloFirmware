@@ -6,6 +6,7 @@ import lm75
 import flags
 import pysaver
 import Data.pins as pins
+import led_controller as led
 
 red_pin = pins.red_pin
 green_pin = pins.green_pin
@@ -49,6 +50,7 @@ async def __setup__():
     
     # disable all outputs to avoid blinking during setup 
     turn_leds_off()
+    led.on = False
     
     _pwm.append(machine.PWM(machine.Pin(red_pin)))
     _pwm.append(machine.PWM(machine.Pin(green_pin)))
@@ -114,6 +116,7 @@ async def __loop__():
         if (not pins_enabled and is_on):
             pins_enabled = True
             turn_leds_on()
+            led.on = True
         
 #         if (current_temp > max_op_temp):
 #             turn_leds_off()
@@ -129,11 +132,13 @@ async def toggle_power_status_waiter():
             is_on = not is_on
         
             if is_on:
+                led.on = True
                 if (not pins_enabled):
                     pins_enabled = True
                 turn_leds_on()
                 pysaver.save("is_on", is_on)
             else:
+                led.on = False
                 turn_leds_off()
                 pysaver.save("current_color", current_color)
                 pysaver.save("is_on", is_on)

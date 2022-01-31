@@ -9,6 +9,7 @@ import os
 import tags
 import wifi
 import rewriter
+import led_controller as led
 
 server = '0.0.0.0'
 port = 6454
@@ -26,11 +27,14 @@ artnet_fx = pysaver.load("artnet_fx", [100,0], True)
 artnet_control = pysaver.load("artnet_control", [1,0], True)
 
 artnet_offset_waiter_task = None
+update_leds = True
 
 async def __setup__():
     global _socket, artnet_offset_waiter_task
     
     artnet_offset_waiter_task = asyncio.create_task(toggle_artnet_offset_waiter())
+    
+    update_led()
     
     _socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
     _socket.bind((server,port))
@@ -58,7 +62,8 @@ async def toggle_artnet_offset_waiter():
         artnet_control[1] += 5
         if (artnet_control[1] == 30):
             artnet_control[1] = 0
-            
+        
+        update_led()
         pysaver.save("artnet_control", [artnet_control[0],artnet_control[1]])
         print("Art-Net Offset Changed - " + str(artnet_control[1]))
     
@@ -150,6 +155,12 @@ def filter_incoming_command(command):
 
 op_codes = { "0x5000":color_from_artnet, "0x4000":artnet_repl }
 
+def update_led():
+    global artnet_control, led_color
+    if update_leds:
+        led.clear_foreground()
+        led.set_single_led(int(artnet_control[1]/5), led.FOREGROUND_LAYER, (255,100,0))
+    
 def parse_tuple(string):
     try:
         s = eval(string)

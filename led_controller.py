@@ -2,6 +2,8 @@ import machine
 import pysaver
 import Data.pins as pins
 
+on = True
+
 FOREGROUND_LAYER = 0
 BACKGROUND_LAYER = 1
 
@@ -10,11 +12,11 @@ TYPE_NEO = 1
 
 led_count = 6
 
-starting_foreground = [0,0,0]
-starting_background = [255,255,255]
+boot_pattern = [[255,0,255], [255,0,255], [255,0,255], [255,0,255], [255,0,255], [255,0,255]]
+off_pattern = [[255, 0, 0], [130, 0, 0], [40, 0, 0], [40, 0, 0], [130, 0, 0], [255, 0, 0]]
 
 foreground = []
-background = []
+background = boot_pattern
 
 led_type = pysaver.load("led_type", TYPE_APA, True)
 
@@ -28,8 +30,7 @@ async def __setup__():
     global leds, foreground, background
     
     for i in range(led_count):
-        foreground.append(starting_foreground)
-        background.append(starting_background)
+        foreground.append([0,0,0])
     
     if (led_type == TYPE_APA):
         from Lib.micropython_dotstar import DotStar as apa102
@@ -38,30 +39,72 @@ async def __setup__():
     else:
         import neopixel
         leds = neopixel.NeoPixel(machine.Pin(neopixel_pin), led_count)
+        
+    apply_color()
 
 async def __slowerloop__():
+    apply_color()
+
+def apply_color():
     global leds, foreground, background
-    for i in range(led_count):
-        red = None
-        green = None
-        blue = None
+    if on:
+        for i in range(led_count):
+            red = None
+            green = None
+            blue = None
         
-        if (foreground[i] is not [0,0,0]):
-            red = foreground[i][0]
-            green = foreground[i][1]
-            blue = foreground[i][2]
-        else:
-            red = background[i][0]
-            green = background[i][1]
-            blue = background[i][2]
-        
-        leds[i] = (green, red, blue)
-        if (led_type == TYPE_NEO):
-            leds.write()
+            if (foreground[i] != [0,0,0]):
+                red = foreground[i][0]
+                green = foreground[i][1]
+                blue = foreground[i][2]
+            else:
+                red = background[i][0]
+                green = background[i][1]
+                blue = background[i][2]
             
+            leds[i] = (green, red, blue)
+            if (led_type == TYPE_NEO):
+                leds.write()
+    else:
+        for i in range(led_count):
+            red = off_pattern[i][0]
+            green = off_pattern[i][1]
+            blue = off_pattern[i][2]
+            
+            leds[i] = (green, red, blue)
+            if (led_type == TYPE_NEO):
+                leds.write()
+    print("Values - " + str(leds))
+                
+def set_custom_pattern(layer, pattern):
+    global foreground, background
+    if layer is FOREGROUND_LAYER:
+        foreground = pattern
+    else:
+        background = pattern
+
 def set_solid_color(layer, color):
     global foreground, background
     if layer is FOREGROUND_LAYER:
-        foreground = list(color)
+        for i in range(led_count):
+            foreground[i] = list(color)
     else:
-        background = list(color)
+        for i in range(led_count):
+            background[i] = list(color)
+
+def set_single_led(index, layer, color):
+    global foreground, background
+    if layer is FOREGROUND_LAYER:
+        foreground[index] = list(color)
+    else:
+        background[index] = list(color)
+
+def clear_foreground():
+    global foreground
+    for i in range(led_count):
+        foreground[i] = [0,0,0]
+        
+def clear_background():
+    global background
+    for i in range(led_count):
+        background[i] = [0,0,0]

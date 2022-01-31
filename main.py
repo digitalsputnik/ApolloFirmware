@@ -4,9 +4,9 @@ import machine
 
 main_loop_frequency = 5
 slow_loop_frequency = 10
-slower_loop_frequency = 1000
+slower_loop_frequency = 100
 
-import_modules = ['fan_controller', 'lm75', 'inputs', 'renderer', 'wifi', 'artnet_client']
+import_modules = ['led_controller', 'fan_controller', 'lm75', 'inputs', 'renderer', 'wifi', 'artnet_client']
 
 async def main_loop():
     global main_tasks, main_loop_frequency

@@ -4,9 +4,12 @@ import network
 import pysaver
 import flags
 import time
+import led_controller as led
 
 connected = False
 network_mode_waiter_task = None
+
+update_leds = True
 
 AP = 0
 CLIENT = 1
@@ -24,14 +27,19 @@ async def __setup__():
     network_mode_waiter_task = asyncio.create_task(toggle_network_mode_waiter())
     
     if network_mode is CLIENT:
+        update_led()
         await set_client()
     else:
+        update_led()
         await set_ap()
 
 async def __slowerloop__():
     global connected, sta_if
     try:
-        connected = sta_if.isconnected()
+        new_connected_value = sta_if.isconnected()
+        if connected is not new_connected_value and network_mode is not AP:
+            connected = new_connected_value
+            update_led()
     except:
         pass
     
@@ -39,6 +47,8 @@ async def toggle_network_mode_waiter():
     global network_mode, AP, CLIENT, wifi_ssid, wifi_pw
     while True:
         await flags.program_long_flag.wait()
+        led.on = False
+        led.apply_color()
         network_mode = network_mode + 1
         if network_mode > 1:
             network_mode = 0
@@ -51,7 +61,6 @@ async def set_ap():
     sta_if = network.WLAN(network.AP_IF)
     sta_if.active(True)
     sta_if.config(essid=device_id, authmode=network.AUTH_WPA_WPA2_PSK, password="dsputnik")
-
     print('\nNetwork config: '+str(sta_if.ifconfig()))
 
 async def set_client():
@@ -60,7 +69,7 @@ async def set_client():
         while connected is False:
             print("Trying custom client")
             await start_connecting(wifi_ssid, wifi_pw)
-            
+            connected = sta_if.isconnected()
             if connected is False:
                 print("Trying closest apollo")
                 await connect_to_smallest_apollo()
@@ -144,3 +153,23 @@ def scan_ssids():
     sta_if.active(True)
     ssids = sta_if.scan()
     return ssids
+
+def update_led():
+    global connected, network_mode, AP, sta_if, wifi_ssid
+    
+    if update_leds:
+        _blue_gradient = [[0, 0, 40], [0, 0, 80], [0, 0 ,120], [0, 0, 160], [0, 0, 200], [0, 0, 240]]
+        _yellow_gradient = [[40, 40, 0], [80, 80, 0], [120, 120 ,0], [160, 160, 0], [200, 200, 0], [240, 240, 0]]
+        _red_gradient = [[40, 0, 0], [80, 0, 0], [120, 0 ,0], [160, 0, 0], [200, 0, 0], [240, 0, 0]]
+        _green_gradient = [[0, 40, 0], [0, 80, 0], [0, 120 ,0], [0, 160, 0], [0, 200, 0], [0, 240, 0]]
+    
+        if network_mode is AP:
+            led.set_custom_pattern(led.BACKGROUND_LAYER, _blue_gradient)
+        else:
+            if connected:
+                if sta_if.config('essid') is wifi_ssid:
+                    led.set_custom_pattern(led.BACKGROUND_LAYER, _green_gradient)
+                else:
+                    led.set_custom_pattern(led.BACKGROUND_LAYER, _yellow_gradient)
+            else:
+                led.set_custom_pattern(led.BACKGROUND_LAYER, _red_gradient)
