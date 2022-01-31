@@ -3,7 +3,6 @@ import machine
 import network
 import pysaver
 import flags
-import led_controller as led
 import time
 
 connected = False
@@ -21,7 +20,6 @@ device_id = pysaver.load("device_id", "ApolloXXXX", True)
     
 async def __setup__():
     global network_mode_waiter_task, network_mode, AP, CLIENT, wifi_ssid, wifi_pw
-    update_led()
     
     network_mode_waiter_task = asyncio.create_task(toggle_network_mode_waiter())
     
@@ -36,7 +34,6 @@ async def __slowerloop__():
         connected = sta_if.isconnected()
     except:
         pass
-    update_led()
     
 async def toggle_network_mode_waiter():
     global network_mode, AP, CLIENT, wifi_ssid, wifi_pw
@@ -45,7 +42,6 @@ async def toggle_network_mode_waiter():
         network_mode = network_mode + 1
         if network_mode > 1:
             network_mode = 0
-        update_led()
         pysaver.save("network_mode", network_mode)
         machine.reset()
         print("Network Mode Changed. Network Mode - " + str(network_mode))
@@ -136,7 +132,6 @@ def change_network_mode(mode = 0, ssid="", pw=""):
         pysaver.save("wifi_ssid", wifi_ssid)
         pysaver.save("wifi_pw", wifi_pw)
         
-    update_led()
     machine.reset()
 
 def delete_saved_ssid():
@@ -149,20 +144,3 @@ def scan_ssids():
     sta_if.active(True)
     ssids = sta_if.scan()
     return ssids
-
-def update_led():
-    global connected, network_mode, AP, sta_if, wifi_ssid
-    if network_mode is AP:
-        for i in range(6):
-            led.set_led(i,(0,0,int(i*30)))
-    else:
-        if connected:
-            if sta_if.config('essid') is wifi_ssid:
-                for i in range(6):
-                    led.set_led(i,(int(i*30),0,0))
-            else:
-                for i in range(6):
-                    led.set_led(i,(int(i*30),int(i*30),0))
-        else:
-            for i in range(6):
-                led.set_led(i,(0,int(i*30),0))

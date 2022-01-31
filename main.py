@@ -4,7 +4,7 @@ import machine
 
 main_loop_frequency = 5
 slow_loop_frequency = 10
-slower_loop_frequency = 100
+slower_loop_frequency = 1000
 
 import_modules = ['fan_controller', 'lm75', 'inputs', 'renderer', 'wifi', 'artnet_client']
 

@@ -3,7 +3,6 @@ import socket
 from struct import pack, unpack
 import pysaver
 import flags
-import led_controller as led
 import time
 import io
 import os
@@ -13,8 +12,6 @@ import rewriter
 
 server = '0.0.0.0'
 port = 6454
-
-led_color = (100,255,0)
 
 callback_control = None
 callback_fx = None
@@ -33,8 +30,6 @@ artnet_offset_waiter_task = None
 async def __setup__():
     global _socket, artnet_offset_waiter_task
     
-    update_led()
-    
     artnet_offset_waiter_task = asyncio.create_task(toggle_artnet_offset_waiter())
     
     _socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
@@ -44,7 +39,6 @@ async def __setup__():
     
 async def __slowloop__():
     global _socket, callback_control
-    update_led()
     try:
         data, address = _socket.recvfrom(1024)
         
@@ -55,9 +49,6 @@ async def __slowloop__():
             print("Received a non Art-Net packet")
     except Exception as e:
         await asyncio.sleep(0)
-        
-async def __slowerloop__():
-    update_led()
     
 async def toggle_artnet_offset_waiter():
     global artnet_control
@@ -70,13 +61,6 @@ async def toggle_artnet_offset_waiter():
             
         pysaver.save("artnet_control", [artnet_control[0],artnet_control[1]])
         print("Art-Net Offset Changed - " + str(artnet_control[1]))
-
-def update_led():
-    global artnet_control, led_color
-    led.unlock_all_leds()
-    new_led = int(artnet_control[1]/5)
-    led.set_led(new_led, led_color)
-    led.lock_led(new_led)
     
 def is_artnet_packet(data):
     if data[:7] != b'Art-Net':
