@@ -73,7 +73,7 @@ async def set_client():
             await connect_to_smallest_apollo()
             print("Trying again")
 
-async def connect_to_smallest_apollo(callback=None, timeout_ms=20000):
+async def connect_to_smallest_apollo(callback=None, timeout_ms=10000):
     apollo_found = False
     timed_out = False
     start_time = time.ticks_ms()
@@ -81,10 +81,13 @@ async def connect_to_smallest_apollo(callback=None, timeout_ms=20000):
         ssids = scan_ssids()
         smallest_apollo = 9999
         for ssid in ssids:
-            if b"Apollo" in ssid[0] and len(ssid[0]) == 10:
-                if smallest_apollo > int(ssid[0][-4:]):
-                    smallest_apollo = int(ssid[0][-4:])
-                    apollo_found = True
+            if b"Apollo" in ssid[0] and len(ssid[0]) is 10:
+                try:
+                    if smallest_apollo > int(ssid[0][-4:]):
+                        smallest_apollo = int(ssid[0][-4:])
+                        apollo_found = True
+                except ValueError:
+                    print("Found apollo lamp with an odd name")
 
         if apollo_found:
             selected_ssid = "Apollo" + '{:0>{w}}'.format(str(smallest_apollo), w=4)
@@ -98,7 +101,7 @@ async def connect_to_smallest_apollo(callback=None, timeout_ms=20000):
             timed_out = True
             print("Closest Apollo Timed Out")
 
-async def start_connecting(ssid, pw, callback=None, timeout_ms=2000):
+async def start_connecting(ssid, pw, callback=None, timeout_ms=10000):
     global sta_if
     sta_if = network.WLAN(network.STA_IF)
     if not sta_if.isconnected():
