@@ -74,7 +74,6 @@ def apply_color():
             leds[i] = (green, red, blue)
             if (led_type == TYPE_NEO):
                 leds.write()
-    print("Values - " + str(leds))
                 
 def set_custom_pattern(layer, pattern):
     global foreground, background
