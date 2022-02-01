@@ -3,13 +3,11 @@ import machine
 import network
 import pysaver
 import flags
-import time
 import led_controller as led
+import time
 
 connected = False
 network_mode_waiter_task = None
-
-update_leds = True
 
 AP = 0
 CLIENT = 1
@@ -23,35 +21,31 @@ device_id = pysaver.load("device_id", "ApolloXXXX", True)
     
 async def __setup__():
     global network_mode_waiter_task, network_mode, AP, CLIENT, wifi_ssid, wifi_pw
+    update_led()
     
     network_mode_waiter_task = asyncio.create_task(toggle_network_mode_waiter())
     
     if network_mode is CLIENT:
-        update_led()
         await set_client()
     else:
-        update_led()
         await set_ap()
 
 async def __slowerloop__():
     global connected, sta_if
     try:
-        new_connected_value = sta_if.isconnected()
-        if connected is not new_connected_value and network_mode is not AP:
-            connected = new_connected_value
-            update_led()
+        connected = sta_if.isconnected()
     except:
         pass
+    update_led()
     
 async def toggle_network_mode_waiter():
     global network_mode, AP, CLIENT, wifi_ssid, wifi_pw
     while True:
         await flags.program_long_flag.wait()
-        led.on = False
-        led.apply_color()
         network_mode = network_mode + 1
         if network_mode > 1:
             network_mode = 0
+        update_led()
         pysaver.save("network_mode", network_mode)
         machine.reset()
         print("Network Mode Changed. Network Mode - " + str(network_mode))
@@ -61,7 +55,8 @@ async def set_ap():
     sta_if = network.WLAN(network.AP_IF)
     sta_if.active(True)
     sta_if.config(essid=device_id, authmode=network.AUTH_WPA_WPA2_PSK, password="dsputnik")
-    print('\nNetwork config: '+str(sta_if.ifconfig()))
+
+    print('\nNetwork config:'+str(sta_if.ifconfig()))
 
 async def set_client():
     global wifi_ssid, wifi_pw, connected
@@ -69,7 +64,7 @@ async def set_client():
         while connected is False:
             print("Trying custom client")
             await start_connecting(wifi_ssid, wifi_pw)
-            connected = sta_if.isconnected()
+            
             if connected is False:
                 print("Trying closest apollo")
                 await connect_to_smallest_apollo()
@@ -78,7 +73,7 @@ async def set_client():
             await connect_to_smallest_apollo()
             print("Trying again")
 
-async def connect_to_smallest_apollo(callback=None, timeout_ms=10000):
+async def connect_to_smallest_apollo(callback=None, timeout_ms=20000):
     apollo_found = False
     timed_out = False
     start_time = time.ticks_ms()
@@ -103,7 +98,7 @@ async def connect_to_smallest_apollo(callback=None, timeout_ms=10000):
             timed_out = True
             print("Closest Apollo Timed Out")
 
-async def start_connecting(ssid, pw, callback=None, timeout_ms=10000):
+async def start_connecting(ssid, pw, callback=None, timeout_ms=2000):
     global sta_if
     sta_if = network.WLAN(network.STA_IF)
     if not sta_if.isconnected():
@@ -126,7 +121,7 @@ async def start_connecting(ssid, pw, callback=None, timeout_ms=10000):
     if connected:
         print('\nNetwork config:', sta_if.ifconfig())
     
-def change_network_mode(mode = 0, ssid="", pw=""):
+def change_network_mode(mode = 0, ssid=None, pw=None):
     global network_mode, CLIENT, wifi_ssid, wifi_pw
     
     network_mode = mode
@@ -134,13 +129,13 @@ def change_network_mode(mode = 0, ssid="", pw=""):
     
     if mode is CLIENT:
         #change the SSID and PW only if they are provided otherwise keep the saved values
-        if ssid != "":
+        if ssid is not None:
             wifi_ssid = ssid
-        if pw != "":
             wifi_pw = pw
-        pysaver.save("wifi_ssid", wifi_ssid)
-        pysaver.save("wifi_pw", wifi_pw)
+            pysaver.save("wifi_ssid", wifi_ssid)
+            pysaver.save("wifi_pw", wifi_pw)
         
+    update_led()
     machine.reset()
 
 def delete_saved_ssid():
@@ -156,20 +151,17 @@ def scan_ssids():
 
 def update_led():
     global connected, network_mode, AP, sta_if, wifi_ssid
-    
-    if update_leds:
-        _blue_gradient = [[0, 0, 40], [0, 0, 80], [0, 0 ,120], [0, 0, 160], [0, 0, 200], [0, 0, 240]]
-        _yellow_gradient = [[40, 40, 0], [80, 80, 0], [120, 120 ,0], [160, 160, 0], [200, 200, 0], [240, 240, 0]]
-        _red_gradient = [[40, 0, 0], [80, 0, 0], [120, 0 ,0], [160, 0, 0], [200, 0, 0], [240, 0, 0]]
-        _green_gradient = [[0, 40, 0], [0, 80, 0], [0, 120 ,0], [0, 160, 0], [0, 200, 0], [0, 240, 0]]
-    
-        if network_mode is AP:
-            led.set_custom_pattern(led.BACKGROUND_LAYER, _blue_gradient)
-        else:
-            if connected:
-                if sta_if.config('essid') is wifi_ssid:
-                    led.set_custom_pattern(led.BACKGROUND_LAYER, _green_gradient)
-                else:
-                    led.set_custom_pattern(led.BACKGROUND_LAYER, _yellow_gradient)
+    if network_mode is AP:
+        for i in range(6):
+            led.set_led(i,(0,0,int(i*30)))
+    else:
+        if connected:
+            if sta_if.config('essid') is wifi_ssid:
+                for i in range(6):
+                    led.set_led(i,(int(i*30),0,0))
             else:
-                led.set_custom_pattern(led.BACKGROUND_LAYER, _red_gradient)
+                for i in range(6):
+                    led.set_led(i,(int(i*30),int(i*30),0))
+        else:
+            for i in range(6):
+                led.set_led(i,(0,int(i*30),0))
