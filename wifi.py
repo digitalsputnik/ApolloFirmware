@@ -129,20 +129,22 @@ async def start_connecting(ssid, pw, callback=None, timeout_ms=10000):
     if connected:
         print('\nNetwork config:', sta_if.ifconfig())
     
-def change_network_mode(mode = 0, ssid="", pw=""):
+def change_network_mode(mode = 0, ssid=None, pw=None):
     global network_mode, CLIENT, wifi_ssid, wifi_pw
+    
+    led.on = False
+    led.apply_color()
     
     network_mode = mode
     pysaver.save("network_mode", network_mode)
     
     if mode is CLIENT:
         #change the SSID and PW only if they are provided otherwise keep the saved values
-        if ssid != "":
+        if ssid is not None:
             wifi_ssid = ssid
-        if pw != "":
             wifi_pw = pw
-        pysaver.save("wifi_ssid", wifi_ssid)
-        pysaver.save("wifi_pw", wifi_pw)
+            pysaver.save("wifi_ssid", wifi_ssid)
+            pysaver.save("wifi_pw", wifi_pw)
         
     machine.reset()
 
