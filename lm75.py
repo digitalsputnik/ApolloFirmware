@@ -3,6 +3,7 @@ import machine
 from math import floor
 import pysaver
 import Data.pins as pins
+import fan_controller as fan
 
 i2c = None
 
@@ -19,12 +20,6 @@ async def __setup__():
     global i2c
     i2c = machine.SoftI2C(scl=machine.Pin(i2c_clock_pin), sda=machine.Pin(i2c_data_pin))
     asyncio.create_task(temp_loop())
-    # asyncio.create_task(print_temp())
-
-async def print_temp():
-    while True:
-        await asyncio.sleep(2)
-        print(str(current_temp))
 
 async def temp_loop():
     global temp_values, current_temp
@@ -56,4 +51,4 @@ def get_temp():
         return int(last_results[0]*10+last_results[1])
     except Exception as e:
         error = e
-        return 220 # Average room temperature is 22 degrees celcius
+        return fan.target_temp + 10 # This is so the fans would never stop on an error

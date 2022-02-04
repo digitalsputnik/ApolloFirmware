@@ -16,10 +16,22 @@ program_short = flags.program_short_flag.set # currently waited for in artnet_cl
 program_long = flags.program_long_flag.set # currently waited for in wifi
 
 async def __setup__():
+    asyncio.create_task(setup_buttons())
+        
+async def setup_buttons():
     global power_pin, program_pin
     
-    power_button = Pushbutton(Pin(power_pin, Pin.IN, Pin.PULL_UP), True)
-    program_button = Pushbutton(Pin(program_pin, Pin.IN, Pin.PULL_UP), True)
+    power_button_pin_object = Pin(power_pin, Pin.IN, Pin.PULL_UP)
+    program_button_pin_object = Pin(program_pin, Pin.IN, Pin.PULL_UP)
+    
+    while program_button_pin_object.value() is 1:
+        await asyncio.sleep_ms(500)
+    
+    while program_button_pin_object.value() is 0:
+        await asyncio.sleep_ms(500)
+    
+    power_button = Pushbutton(power_button_pin_object, True)
+    program_button = Pushbutton(program_button_pin_object, True)
     
     if power_short != None:
         power_button.release_func(power_short)

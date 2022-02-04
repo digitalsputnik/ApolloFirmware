@@ -32,14 +32,6 @@ async def slower_loop():
 async def setup():
     global import_modules, setup_tasks, main_tasks, slow_tasks, slower_tasks
     
-    # Run custom script if program button isn't held down
-    # TODO - Indicate to user when script has been ignored to avoid accidental wifi connection type changes (default program button action)
-    # NOTE - It seems like checking for pin value slows boot time, needs further research
-    program_button = machine.Pin(pins.program_pin, machine.Pin.IN, machine.Pin.PULL_UP)
-    
-    if program_button.value() is 1:
-        import custom_script
-    
     setup_tasks = []
     main_tasks = []
     slow_tasks = []
@@ -64,12 +56,25 @@ async def setup():
         if callable(slower_loop_obj):
             slower_tasks.append(slower_loop_obj)
     
+    setup_tasks_list = []
+    
     for task in setup_tasks:
-        asyncio.create_task(task())
+        setup_tasks_list.append(asyncio.create_task(task()))
     
     main = asyncio.create_task(main_loop())
     slow = asyncio.create_task(slow_loop())
     slower = asyncio.create_task(slower_loop())
+    
+    # Wait until setup is finished before running custom script
+    await asyncio.gather(*setup_tasks_list)
+    
+    # Run custom script if program button isn't held down
+    # NOTE - It seems like checking for pin value slows boot time, needs further research
+    program_button = machine.Pin(pins.program_pin, machine.Pin.IN, machine.Pin.PULL_UP)
+    
+    if program_button.value() is 1:
+        import custom_script
+    
     await main
 
 asyncio.run(setup())
