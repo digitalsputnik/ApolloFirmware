@@ -55,17 +55,21 @@ async def __slowloop__():
         await asyncio.sleep(0)
     
 async def toggle_artnet_offset_waiter():
-    global artnet_control
+    global artnet_control, artnet_fx
     while True:
         await flags.program_short_flag.wait()
         
         artnet_control[1] += 5
+        artnet_fx[1] += 5
         if (artnet_control[1] == 30):
             artnet_control[1] = 0
+            artnet_fx[1] = 0
         
         update_led()
         pysaver.save("artnet_control", [artnet_control[0],artnet_control[1]])
+        pysaver.save("artnet_fx", [artnet_fx[0],artnet_fx[1]])
         print("Art-Net Offset Changed - " + str(artnet_control[1]))
+        print("Art-Net FX Channel Offset Changed - " + str(artnet_fx[1]))
     
 def is_artnet_packet(data):
     if data[:7] != b'Art-Net':

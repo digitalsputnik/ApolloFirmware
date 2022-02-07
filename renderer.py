@@ -209,8 +209,8 @@ def render_color():
         lowest = int(lowest/4)
  
         # calculate WB portion from 0-255
-        # the full range is 1500-10000K therefore 8500/255 = 33.33K increments
-        wb_in = wb_in*33.33334+1500
+        # the full range is 2800-10000K therefore 7200/255 = 28.235K increments
+        wb_in = wb_in*(7200/256)+2800
         
         ranges = [500,800,400,1600,800,2200,2200]
         values = [1500,2000,2800,3200,4800,5600,7800,10000]
