@@ -72,7 +72,7 @@ def send_file_piece(piece_number, data):
         pieces_list[piece_number] = data
         if received_pieces_count() == total_pieces:
             for piece in pieces_list:
-                full_file += piece.decode('utf-8')
+                full_file += piece
             write_file()
     else:
         print("File upload not initiated")
