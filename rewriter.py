@@ -19,6 +19,8 @@ Setup can be done once.
 import os
 import pysaver
 
+version = 1.1
+
 authenticated = False
 
 rewriter_setup = pysaver.load("rewriter_setup", False)
@@ -66,13 +68,16 @@ def start_file_upload(inc_path, piece_count):
     else:
         print("Authenticate first")
         
-def send_file_piece(piece_number, data):
+def send_file_piece(piece_number, data, is_byte=False):
     global receiving_data, total_pieces, received_pieces, pieces_list, full_file, path
     if receiving_data:
         pieces_list[piece_number] = data
         if received_pieces_count() == total_pieces:
             for piece in pieces_list:
-                full_file += piece
+                if is_byte:
+                    full_file += piece.decode('utf-8')
+                else:
+                    full_file += piece
             write_file()
     else:
         print("File upload not initiated")
@@ -104,9 +109,12 @@ def missing_pieces():
             if piece is "":
                 not_received.append(index)
         not_received = tuple(not_received)
-        return not_received
+        if not_received == []:
+            return False
+        else:
+            return not_received
     else:
-        print("Not currently uploading")
+        return False
     
 def write_file():
     global full_file, path, receiving_data
