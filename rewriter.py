@@ -19,7 +19,9 @@ Setup can be done once.
 import os
 import pysaver
 
-version = 1.1
+version = 1.2
+
+hashes = pysaver.load("hashes", {}, True)
 
 authenticated = False
 
@@ -33,6 +35,7 @@ pieces_list = []
 
 path = ""
 full_file = ""
+current_file_hash = ""
 
 def setup(pw):
     global rewriter_password, rewriter_setup
@@ -52,11 +55,22 @@ def auth(pw):
         print("Authenticated")
     else:
         print("Wrong Password")
+        
+def check_file_hash(file_name, file_hash):
+    global hashes
+    if file_hash in hashes.values():
+        return "correct"
+    elif file_name in hashes.keys():
+        return "outdated"
+    else:
+        return "none"
 
-def start_file_upload(inc_path, piece_count):
-    global authenticated, receiving_data, total_pieces, pieces_list, path
+def start_file_upload(inc_path, piece_count, file_hash = None):
+    global authenticated, receiving_data, total_pieces, pieces_list, path, current_file_hash
     if authenticated:
         if not receiving_data:
+            if file_hash is not None:
+                current_file_hash = file_hash
             path = inc_path
             total_pieces = piece_count
             receiving_data = True
@@ -117,12 +131,13 @@ def missing_pieces():
         return False
     
 def write_file():
-    global full_file, path, receiving_data
+    global full_file, path, receiving_data, current_file_hash
     if receiving_data:
         try:
             write_file=open(path, "w")
             write_file.write(full_file)
             write_file.close()
+            update_hash_list(path, current_file_hash)
             print("Uploaded. File " + path + " modified")
             reset()
         except Exception as e:
@@ -132,10 +147,16 @@ def write_file():
         print("Not currently uploading")
 
 def reset():
-    global receiving_data, total_pieces, received_pieces, pieces_list, full_file, path
+    global receiving_data, total_pieces, received_pieces, pieces_list, full_file, path, current_file_hash
     receiving_data = False
     total_pieces = 0
     received_pieces = 0
     pieces_list = []
     full_file = ""
     path = ""
+    current_file_hash = ""
+    
+def update_hash_list(path, file_hash):
+    global hashes
+    hashes[path] = file_hash
+    pysaver.save("hashes", hashes)
