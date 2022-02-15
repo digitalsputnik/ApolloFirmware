@@ -3,7 +3,7 @@ import machine
 from math import floor
 import pysaver
 import Data.pins as pins
-import fan_controller as fan
+import renderer
 
 i2c = None
 
@@ -51,4 +51,4 @@ def get_temp():
         return int(last_results[0]*10+last_results[1])
     except Exception as e:
         error = e
-        return fan.target_temp + 10 # This is so the fans would never stop on an error
+        return renderer.max_op_temp + 10 # This is so the lamp would turn off to avoid burning

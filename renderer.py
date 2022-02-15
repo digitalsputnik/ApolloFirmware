@@ -30,7 +30,7 @@ red_lut = ()
 temp_sensor = None
 temp_comp_enabled = True
 
-max_op_temp = 700
+max_op_temp = 800
 max_temp_reached = False
 
 pins_enabled = False
@@ -97,6 +97,13 @@ async def __loop__():
         current_color = tuple(current_color)
 
         current_temp = lm75.current_temp
+        
+        if (current_temp > max_op_temp):
+            led.off_pattern = [[255,0,0],[255,255,0],[255,0,0],[255,255,0],[255,0,0],[255,255,0]]
+            led.on = False
+            turn_leds_off()
+            is_on = False
+            max_temp_reached = True
     
         if current_temp > (1022-300):
             current_temp = 1022-300
@@ -117,11 +124,6 @@ async def __loop__():
             pins_enabled = True
             turn_leds_on()
             led.on = True
-        
-#         if (current_temp > max_op_temp):
-#             turn_leds_off()
-#             is_on = False
-#             max_temp_reached = True
 
 async def toggle_power_status_waiter():
     global is_on, current_color, pins_enabled, max_temp_reached
@@ -177,13 +179,14 @@ def set_color(r_in=0, g_in=0, b_in=0, wb_in=123, fx_in=0):
 def render_color():
     global target_color, max_temp_reached, is_on, py_buffer
     
-    r_in = color_buffer[0][0] * py_buffer[0] >> 8
-    g_in = color_buffer[0][1] * py_buffer[1] >> 8
-    b_in = color_buffer[0][2] * py_buffer[2] >> 8
-    wb_in = color_buffer[0][3]
-    fx_in = color_buffer[0][4]
-    
     if not max_temp_reached and is_on:
+        
+        r_in = color_buffer[0][0] * py_buffer[0] >> 8
+        g_in = color_buffer[0][1] * py_buffer[1] >> 8
+        b_in = color_buffer[0][2] * py_buffer[2] >> 8
+        wb_in = color_buffer[0][3]
+        fx_in = color_buffer[0][4]
+        
         # fx implementation
         # stream live data to the fx_buffer and use RGBtX controls for asjust light with any Art-Net controller
         r_base = r_in * (256-fx_in) >> 8
