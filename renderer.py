@@ -97,6 +97,13 @@ async def __loop__():
         current_color = tuple(current_color)
 
         current_temp = lm75.current_temp
+        
+        if (current_temp > max_op_temp):
+            led.off_pattern = [[255,0,0],[255,255,0],[255,0,0],[255,255,0],[255,0,0],[255,255,0]]
+            led.on = False
+            turn_leds_off()
+            is_on = False
+            max_temp_reached = True
     
         if current_temp > (1022-300):
             current_temp = 1022-300
@@ -117,13 +124,6 @@ async def __loop__():
             pins_enabled = True
             turn_leds_on()
             led.on = True
-        
-        if (current_temp > max_op_temp):
-            led.off_pattern = [[255,0,0],[255,255,0],[255,0,0],[255,255,0],[255,0,0],[255,255,0]]
-            led.on = False
-            turn_leds_off()
-            is_on = False
-            max_temp_reached = True
 
 async def toggle_power_status_waiter():
     global is_on, current_color, pins_enabled, max_temp_reached

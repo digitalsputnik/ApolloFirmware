@@ -24,8 +24,6 @@ async def setup_buttons():
     power_button_pin_object = Pin(power_pin, Pin.IN, Pin.PULL_UP)
     program_button_pin_object = Pin(program_pin, Pin.IN, Pin.PULL_UP)
     
-    print(program_button_pin_object.value())
-    
     if program_button_pin_object.value() is 0:
         while program_button_pin_object.value() is 0:
             await asyncio.sleep_ms(500)
