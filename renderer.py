@@ -153,7 +153,7 @@ async def set_default_color_waiter():
                 is_on = True
                 turn_leds_on()
         
-            set_color(255,255,255,123)
+            set_color(255,255,255,99)
 
 def turn_leds_off():
     machine.Pin(27, machine.Pin.OUT, value=0)
