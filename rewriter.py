@@ -19,9 +19,11 @@ Setup can be done once.
 import os
 import pysaver
 
-version = 1.2
+version = 1.3
 
 hashes = pysaver.load("hashes", {}, True)
+repo_hash = pysaver.load("repo_hash", None, True)
+dirty_files = pysaver.load("dirty_files", [], True)
 
 authenticated = False
 
@@ -160,3 +162,28 @@ def update_hash_list(path, file_hash):
     global hashes
     hashes[path] = file_hash
     pysaver.save("hashes", hashes)
+    
+def update_repo_hash(new_repo_hash):
+    global repo_hash
+    repo_hash = new_repo_hash
+    pysaver.save("repo_hash", repo_hash)
+    print("Repo hash updated")
+    
+def clear_dirty_files():
+    global dirty_files
+    dirty_files = []
+    pysaver.save("dirty_files", dirty_files)
+    
+def add_dirty_file(dirty_file_path):
+    global dirty_files
+    if dirty_file_path not in dirty_files:
+        dirty_files.append(dirty_file_path)
+        pysaver.save("dirty_files", dirty_files)
+    print("File Added")
+
+def remove_dirty_file(dirty_file_path):
+    global dirty_files
+    if dirty_file_path in dirty_files:
+        dirty_files.remove(dirty_file_path)
+        pysaver.save("dirty_files", dirty_files)
+    print("File Removed")
