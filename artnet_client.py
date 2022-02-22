@@ -163,7 +163,13 @@ def update_led():
     global artnet_control, led_color
     if update_leds:
         led.clear_foreground()
-        led.set_single_led(int(artnet_control[1]/5), led.FOREGROUND_LAYER, (255,100,0))
+        
+        #handle the max led count
+        active_led = int(artnet_control[1]/5)
+        if active_led<=led.led_count:
+            led.set_single_led(active_led, led.FOREGROUND_LAYER, (255,100,0))
+        else:
+            led.clear_foreground()
     
 def parse_tuple(string):
     try:

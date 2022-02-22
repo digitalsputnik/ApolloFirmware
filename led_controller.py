@@ -48,7 +48,10 @@ async def __slowerloop__():
 def apply_color():
     global leds, foreground, background
     if on:
-        for i in range(led_count):
+        for j in range(led_count):
+            #invert the output array
+            i = led_count-j-1
+            
             red = None
             green = None
             blue = None
@@ -62,16 +65,19 @@ def apply_color():
                 green = background[i][1]
                 blue = background[i][2]
             
-            leds[i] = (green, red, blue)
+            leds[j] = (green, red, blue)
             if (led_type == TYPE_NEO):
                 leds.write()
     else:
-        for i in range(led_count):
+        for j in range(led_count):
+            #invert the output array
+            i = led_count-j-1
+            
             red = off_pattern[i][0]
             green = off_pattern[i][1]
             blue = off_pattern[i][2]
             
-            leds[i] = (green, red, blue)
+            leds[j] = (green, red, blue)
             if (led_type == TYPE_NEO):
                 leds.write()
                 
