@@ -59,9 +59,9 @@ async def toggle_artnet_offset_waiter():
     while True:
         await flags.program_short_flag.wait()
         
-        artnet_control[1] += 5
-        artnet_fx[1] += 5
-        if (artnet_control[1] == 30):
+        artnet_control[1] += 10
+        artnet_fx[1] += 10
+        if (artnet_control[1] == 60):
             artnet_control[1] = 0
             artnet_fx[1] = 0
         
@@ -165,7 +165,7 @@ def update_led():
         led.clear_foreground()
         
         #handle the max led count
-        active_led = int(artnet_control[1]/5)
+        active_led = int(artnet_control[1]/10)
         if active_led<=led.led_count:
             led.set_single_led(active_led, led.FOREGROUND_LAYER, (255,100,0))
         else:
