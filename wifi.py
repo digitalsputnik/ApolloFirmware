@@ -47,8 +47,11 @@ async def toggle_network_mode_waiter():
     global network_mode, AP, CLIENT, wifi_ssid, wifi_pw
     while True:
         await flags.program_long_flag.wait()
-        led.on = False
+        #set status leds
+        led.background = led.boot_pattern
+        led.clear_foreground()
         led.apply_color()
+        
         network_mode = network_mode + 1
         if network_mode > 1:
             network_mode = 0
@@ -132,7 +135,9 @@ async def start_connecting(ssid, pw, callback=None, timeout_ms=10000):
 def change_network_mode(mode = 0, ssid=None, pw=None):
     global network_mode, CLIENT, wifi_ssid, wifi_pw
     
-    led.on = False
+    #set status leds
+    led.background = led.boot_pattern
+    led.clear_foreground()
     led.apply_color()
     
     network_mode = mode
