@@ -24,7 +24,7 @@ last_control = None
 
 artnet_length = 5
 artnet_fx = pysaver.load("artnet_fx", [100,0], True)
-artnet_control = pysaver.load("artnet_control", [1,0], True)
+artnet_control = pysaver.load("artnet_control", [0,0], True)
 
 artnet_offset_waiter_task = None
 update_leds = True
