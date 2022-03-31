@@ -36,6 +36,12 @@ async def __setup__():
     
     update_led()
     
+    for i in range(6):
+        if ('ch' + str(i+1) in tags.tags):
+            tags.remove_tag('ch' + str(i+1))
+            
+    tags.add_tag('ch' + str(int(artnet_control[1]/10 + 1)))
+    
     _socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
     _socket.bind((server,port))
     _socket.setblocking(False)
@@ -59,6 +65,8 @@ async def toggle_artnet_offset_waiter():
     while True:
         await flags.program_short_flag.wait()
         
+        tags.remove_tag('ch' + str(int(artnet_control[1]/10 + 1)))
+        
         artnet_control[1] += 10
         artnet_fx[1] += 10
         if (artnet_control[1] == 60):
@@ -66,6 +74,9 @@ async def toggle_artnet_offset_waiter():
             artnet_fx[1] = 0
         
         update_led()
+        
+        tags.add_tag('ch' + str(int(artnet_control[1]/10 + 1)))
+        
         pysaver.save("artnet_control", [artnet_control[0],artnet_control[1]])
         pysaver.save("artnet_fx", [artnet_fx[0],artnet_fx[1]])
         print("Art-Net Offset Changed - " + str(artnet_control[1]))
