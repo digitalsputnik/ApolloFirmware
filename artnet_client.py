@@ -9,6 +9,7 @@ import os
 import tags
 import wifi
 import rewriter
+import renderer
 import led_controller as led
 
 server = '0.0.0.0'
