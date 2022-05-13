@@ -57,11 +57,7 @@ def apply_color():
             blue = None
             white = None
             
-            test = [0,0,0]
-            if led_type == TYPE_NEO:
-                test = [0,0,0,0]
-        
-            if (foreground[i] != test):
+            if (foreground[i][0:3] != [0,0,0]):
                 red = foreground[i][0]
                 green = foreground[i][1]
                 blue = foreground[i][2]          
