@@ -71,7 +71,7 @@ def apply_color():
                     white = 0
             
             if led_type == TYPE_NEO:
-                leds[j] = (red, green , blue, white)
+                leds[j] = (red, int(green/4) , blue, white)
                 leds.write()
             else:
                 leds[j] = (green, red, blue)
@@ -86,7 +86,7 @@ def apply_color():
             
             if led_type == TYPE_NEO:
                 white = 0
-                leds[j] = (red, green , blue, white)
+                leds[j] = (red, int(green/4) , blue, white)
                 leds.write()
             else:
                 leds[j] = (green, red, blue)    
