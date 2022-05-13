@@ -27,7 +27,7 @@ apa_miso_pin = pins.apa_miso_pin
 neopixel_pin = pins.neopixel_pin
 
 async def __setup__():
-    global leds, foreground, background
+    global leds, foreground, background, boot_pattern, off_pattern
     
     for i in range(led_count):
         foreground.append([0,0,0])
@@ -38,7 +38,7 @@ async def __setup__():
         leds = apa102(spi,led_count)
     else:
         import neopixel
-        leds = neopixel.NeoPixel(machine.Pin(neopixel_pin), led_count)
+        leds = neopixel.NeoPixel(machine.Pin(neopixel_pin), led_count, bpp=4)
         
     apply_color()
 
@@ -51,23 +51,34 @@ def apply_color():
         for j in range(led_count):
             #invert the output array
             i = led_count-j-1
-            
+             
             red = None
             green = None
             blue = None
+            white = None
+            
+            test = [0,0,0]
+            if led_type == TYPE_NEO:
+                test = [0,0,0,0]
         
-            if (foreground[i] != [0,0,0]):
+            if (foreground[i] != test):
                 red = foreground[i][0]
                 green = foreground[i][1]
-                blue = foreground[i][2]
+                blue = foreground[i][2]          
+                if led_type == TYPE_NEO:
+                    white = 0
             else:
                 red = background[i][0]
                 green = background[i][1]
                 blue = background[i][2]
+                if led_type == TYPE_NEO:
+                    white = 0
             
-            leds[j] = (green, red, blue)
-            if (led_type == TYPE_NEO):
+            if led_type == TYPE_NEO:
+                leds[j] = (red, green , blue, white)
                 leds.write()
+            else:
+                leds[j] = (green, red, blue)
     else:
         for j in range(led_count):
             #invert the output array
@@ -77,9 +88,12 @@ def apply_color():
             green = off_pattern[i][1]
             blue = off_pattern[i][2]
             
-            leds[j] = (green, red, blue)
-            if (led_type == TYPE_NEO):
+            if led_type == TYPE_NEO:
+                white = 0
+                leds[j] = (red, green , blue, white)
                 leds.write()
+            else:
+                leds[j] = (green, red, blue)    
                 
 def set_custom_pattern(layer, pattern):
     global foreground, background
@@ -107,9 +121,15 @@ def set_single_led(index, layer, color):
 def clear_foreground():
     global foreground
     for i in range(led_count):
-        foreground[i] = [0,0,0]
-        
+        if led_type == TYPE_APA:
+            foreground[i] = [0,0,0]
+        else:
+            foreground[i] = [0,0,0,0]
+            
 def clear_background():
     global background
     for i in range(led_count):
-        background[i] = [0,0,0]
+        if led_type == TYPE_APA:
+            background[i] = [0,0,0]
+        else:
+            background[i] = [0,0,0,0]
