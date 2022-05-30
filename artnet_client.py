@@ -98,7 +98,7 @@ def color_from_artnet(address, packet):
     global artnet_control, artnet_length, last_control, last_fx, last_values
     
     if packet.universe == artnet_fx[0]:
-        color_data = packet.data[artnet_fx[1]:artnet_control[0]+3]
+        color_data = packet.data[artnet_fx[1]:artnet_fx[1]+3]
         last_fx = (packet,color_data)
         
         if callback_fx != None:
