@@ -173,6 +173,11 @@ def set_fx(r_in=255, g_in=255, b_in=255):
     render_color()
 
 def set_color(r_in=0, g_in=0, b_in=0, wb_in=123, fx_in=0):
+    r_in = max(0, min(r_in, 255))
+    g_in = max(0, min(g_in, 255))
+    b_in = max(0, min(b_in, 255))
+    wb_in = max(0, min(wb_in, 255))
+    fx_in = max(0, min(fx_in, 255))
     color_buffer[0] = (r_in, g_in, b_in, wb_in, fx_in)
     render_color()
     
