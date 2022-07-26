@@ -30,6 +30,9 @@ artnet_control = pysaver.load("artnet_control", [0,0], True)
 artnet_offset_waiter_task = None
 update_leds = True
 
+multi_packet_list = {}
+_max_len = 29640000
+
 async def __setup__():
     global _socket, artnet_offset_waiter_task
     
@@ -119,38 +122,95 @@ def color_from_artnet(address, packet):
             callback_control(red,green,blue,white,fx)
         
 def artnet_repl(address, packet):
-    global _socket
-    correct_tag = False
-    packet_tuple = parse_tuple(packet.data.decode())
-    identifier = packet_tuple[0]
-    sent_tags = packet_tuple[1]
-    command = packet_tuple[2]
-    
-    if (len(sent_tags) == 0):
-        correct_tag = True
+    global _socket, _max_len
+    monet_packet = MonetPacket(packet.data)
+    if monet_packet.Total == 1:
+        handle_single_packet(monet_packet, address)
+    elif (monet_packet.Total * 456) > _max_len:
+        print("Too big")
     else:
-        for tag in sent_tags:
-            if (tags.has_tag(tag)):
-                correct_tag = True
-    
-    if correct_tag:
-        safe = filter_incoming_command(command)
+        handle_multi_packet(monet_packet, address)
+        
+def handle_single_packet(packet, address):
+    if tags.has_tag(packet.Tag) or len(packet.Tag) == 0:
+        safe = filter_incoming_command(packet.Data)
         
         s = bytearray()
         os.dupterm(console_out(s))
         
         if safe:
             try:
-                exec(command, globals())
+                exec(packet.Data, globals())
             except Exception as err:
                 print(err)
         else:
             print("Some parts of your command aren't authorized")
             
-        result = bytes(s)
+        result = bytes(s).decode()
+        
         if (len(result) > 0):
-            _socket.sendto(str((wifi.device_id, identifier, result)).encode(), address)
+            if (len(result) > 456):
+                packet_count = int(len(result)/456) + 1
+                packets = []
+            
+                for i in range(packet_count):
+                    packets.append(MonetPacket(packet.Tag, packet.UUID, i + 1, packet_count, result[i*456:(i+1)*456]))
+                
+                for i, pack in enumerate(reversed(packets)):
+                    response_packet = bytearray()
+                    response_packet.extend(generate_header(0x40))
+                    response_packet.extend(pack.as_byte())
+                    _socket.sendto(response_packet, address)
+            else:
+                response_packet = bytearray()
+                response_packet.extend(generate_header(0x40))
+                monet_packet = MonetPacket(packet.Tag, packet.UUID, 1, 1, result)
+                response_packet.extend(monet_packet.as_byte())
+                _socket.sendto(response_packet, address)
         os.dupterm(None)
+
+def handle_multi_packet(packet, address):
+    global multi_packet_list
+    if packet.UUID not in multi_packet_list:
+        multi_packet_list[packet.UUID] = []
+            
+    exists = False
+            
+    for old_packet in multi_packet_list[packet.UUID]:
+        if old_packet == packet:
+            exists = True
+            
+    if not exists:
+        multi_packet_list[packet.UUID].append(packet)
+            
+    if len(multi_packet_list[packet.UUID]) == packet.Total:
+        all_data = ""
+            
+        for pack in sorted(multi_packet_list[packet.UUID], key=lambda x: x.Index):
+            all_data = all_data + pack.Data
+            
+        handle_single_packet(MonetPacket(packet.Tag, packet.UUID, 1, 1, all_data), address)
+        
+        multi_packet_list.pop(packet.UUID, None)
+
+def generate_header(op_code):
+    '''
+    Generates artnet packet header with correct op_code
+    '''
+    header = bytearray()
+    header.extend(bytearray('Art-Net', 'utf8'))
+    header.append(0x0)
+    header.append(0x0)
+    header.append(op_code)
+    header.append(0x0)
+    header.append(0x0)
+    header.append(0x0)
+    header.append(0x0)
+    header.append(0x1) #Universe
+    header.append(0x0)
+    header.append(0x0) 
+    header.append(0x0)
+    return header
 
 def filter_incoming_command(command):
     if not rewriter.authenticated:
@@ -214,3 +274,34 @@ class ArtNetPacket:
             self.length = unpack('!H', data[16:18])[0]
             
             self.data = data[18:]
+            
+class MonetPacket:
+    
+    def __init__(self, *args, **kwargs):
+        if isinstance(args[0], str):
+            self.Tag = args[0]
+            self.UUID = args[1]
+            self.Index = args[2]
+            self.Total = args[3]
+            self.Data = args[4]
+        else:
+            data = args[0]
+            self.Tag  = data[:16].decode().rstrip('\x00')
+            self.UUID  = data[16:52].decode().rstrip('\x00')
+            self.Index  = (data[52 + 1] << 8) + data[52]
+            self.Total  = (data[54 + 1] << 8) + data[54]
+            self.Data  = data[56:].decode()
+        
+    def as_byte(self):
+        packet_data = bytearray(56 + len(self.Data))
+        
+        packet_data[0:16] = self.Tag.encode()
+        packet_data[16:52] = self.UUID.encode()
+        packet_data[52:53] = self.Index.to_bytes(2, 'little')
+        packet_data[54:55] = self.Total.to_bytes(2, 'little')
+        packet_data[56:] = self.Data.encode()
+        
+        return packet_data
+    
+    def __eq__(self, other):
+        return self.UUID == other.UUID and self.Index == other.Index
