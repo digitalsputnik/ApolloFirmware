@@ -123,13 +123,47 @@ def color_from_artnet(address, packet):
         
 def artnet_repl(address, packet):
     global _socket, _max_len
-    monet_packet = MonetPacket(packet.data)
-    if monet_packet.Total == 1:
-        handle_single_packet(monet_packet, address)
-    elif (monet_packet.Total * 456) > _max_len:
-        print("Too big")
+    if packet.data.decode().startswith('('):
+        print("Received old packet")
+        correct_tag = False
+        packet_tuple = parse_tuple(packet.data.decode())
+        identifier = packet_tuple[0]
+        sent_tags = packet_tuple[1]
+        command = packet_tuple[2]
+    
+        if (len(sent_tags) == 0):
+            correct_tag = True
+        else:   
+            for tag in sent_tags:
+                if (tags.has_tag(tag)):
+                    correct_tag = True
+        
+        if correct_tag:
+            safe = filter_incoming_command(command)
+            s = bytearray()
+            os.dupterm(console_out(s))
+            if safe:
+                try:
+                    exec(command, globals())
+                except Exception as err:
+                    print(err)
+            else:
+                print("Some parts of your command aren't authorized")
+                
+            result = bytes(s)
+            
+            if (len(result) > 0):
+                _socket.sendto(str((wifi.device_id, identifier, result)).encode(), address)
+                
+            os.dupterm(None)
     else:
-        handle_multi_packet(monet_packet, address)
+        monet_packet = MonetPacket(packet.data)
+        if monet_packet.Total == 1:
+            handle_single_packet(monet_packet, address)
+        elif (monet_packet.Total * 456) > _max_len:
+            print("Too big")
+        else:
+            handle_multi_packet(monet_packet, address)
         
 def handle_single_packet(packet, address):
     if tags.has_tag(packet.Tag) or len(packet.Tag) == 0:
