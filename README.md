@@ -17,6 +17,13 @@ Micropython software for the Apollo lamps
 8. Update the "Data/_device_id.py"
 9. Update the "Data/pins.py
 
+# Updating software
+
+### Since the Monet-Packet got an overhaul the old device firmware does not support the new packet type, so the devices should be updated with an older working DSDMpy version. The new firmware is backwards compatible so older DSDMpy versions can also communicate with the updated device. But DSDMpy currently is not backwards compatible so the update should be done using an older version
+
+1. Use this version of Update script to update older devices: https://github.com/digitalsputnik/DSDM/archive/80e78f78e51d70f76b44c45f8a4d0dd5643d7c3a.zip
+2. After updating devices you can use the newest version of DSDMpy to communicate with your devices.
+
 
 # terminal usage
 Currently our own communication protocol is used in async mode
