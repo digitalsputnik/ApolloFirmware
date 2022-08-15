@@ -173,10 +173,7 @@ def handle_single_packet(packet, address):
         os.dupterm(console_out(s))
         
         if safe:
-            try:
-                exec(packet.Data, globals())
-            except Exception as err:
-                print(err)
+            execute_command(packet.Data)
         else:
             print("Some parts of your command aren't authorized")
             
@@ -202,6 +199,12 @@ def handle_single_packet(packet, address):
                 response_packet.extend(monet_packet.as_byte())
                 _socket.sendto(response_packet, address)
         os.dupterm(None)
+
+def execute_command(command):
+    try:
+        exec(command, globals())
+    except Exception as err:
+        print(err)
 
 def handle_multi_packet(packet, address):
     global multi_packet_list
