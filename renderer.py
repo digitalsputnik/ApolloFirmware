@@ -27,8 +27,9 @@ _pwm = []
 calibration = []
 red_lut = ()
 
-temp_sensor = None
+temp_sensor = lm75
 temp_comp_enabled = True
+temp_override = 0
 
 max_op_temp = 800
 max_temp_reached = False
@@ -95,8 +96,11 @@ async def __loop__():
             current_color[3] = int(target_color[3])
             
         current_color = tuple(current_color)
-
-        current_temp = lm75.current_temp
+        
+        if temp_override==0: 
+            current_temp = temp_sensor.current_temp
+        else:
+            current_temp = temp_override
         
         if (current_temp > max_op_temp):
             led.off_pattern = [[255,0,0],[255,255,0],[255,0,0],[255,255,0],[255,0,0],[255,255,0]]
